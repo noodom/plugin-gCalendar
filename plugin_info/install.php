@@ -25,7 +25,7 @@ function gCalendar_install() {
         $cron->setClass('gCalendar');
         $cron->setFunction('pull');
         $cron->setEnable(1);
-        $cron->setSchedule('*/10 * * * *');
+        $cron->setSchedule('*/15 * * * *');
         $cron->save();
     }
 }
@@ -34,12 +34,12 @@ function gCalendar_update() {
     $cron = cron::byClassAndFunction('gCalendar', 'pull');
     if (!is_object($cron)) {
         $cron = new cron();
-        $cron->setClass('gCalendar');
-        $cron->setFunction('pull');
-        $cron->setEnable(1);
-        $cron->setSchedule('*/10 * * * *');
-        $cron->save();
     }
+    $cron->setClass('gCalendar');
+    $cron->setFunction('pull');
+    $cron->setEnable(1);
+    $cron->setSchedule('*/15 * * * *');
+    $cron->save();
     $cron->stop();
 }
 
