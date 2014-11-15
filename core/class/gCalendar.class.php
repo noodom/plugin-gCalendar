@@ -66,7 +66,7 @@ class gCalendarCmd extends cmd {
                 'startmax' => '',
                 'sortorder' => 'ascending',
                 'orderby' => 'starttime',
-                'maxresults' => '5',
+                'maxresults' => '20',
                 'startindex' => '1',
                 'search' => '',
                 'singleevents' => 'true',
@@ -421,7 +421,7 @@ class GoogleAgenda {
     protected $_sAuthorName;
     protected $_sAuthorEmail;
 
-    const MAX_RESULTS_DEFAULT = 5;
+    const MAX_RESULTS_DEFAULT = 20;
 
     /**
      * Définie l'agenda avec lequel on travail
