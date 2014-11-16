@@ -1,0 +1,10 @@
+== Google Agenda
+
+=== Description
+Plugin permetant de récuperer des évènements de Google Agenda
+
+=== Configuration
+include::configuration.asciidoc[]
+
+=== Changelog
+include::changelog.asciidoc[]
