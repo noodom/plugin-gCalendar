@@ -59,11 +59,11 @@ class gCalendarCmd extends cmd {
 
     public function execute($_options = array()) {
         try {
-            $oAgenda = new GoogleAgenda($this->getConfiguration('calendarUrl'));
+            $oAgenda = new GoogleAgenda($this->getConfiguration('calendarUrl'),false);
             // Le tableau d'options suivant contient les valeurs par défaut
             $aEvents = $oAgenda->getEvents(array(
-                'startmin' => date('Y-m-d'),
-                'startmax' => '',
+                'startmin' => date('Y-m-d\TH:i:00'),
+                'startmax' => date('Y-m-d\TH:i:59'),
                 'sortorder' => 'ascending',
                 'orderby' => 'starttime',
                 'maxresults' => '20',
@@ -77,9 +77,7 @@ class gCalendarCmd extends cmd {
             $date = date('Y-m-d H:i:s');
             $result = '';
             foreach ($aEvents as $oEvent) {
-                if ($oEvent->getStartDate() < $date && $oEvent->getEndDate() > $date) {
-                    $result .= $oEvent->getTitle() . ' - ';
-                }
+                $result .= $oEvent->getTitle() . ' - ';
             }
             if (trim($result) == '') {
                 return __('Aucun', __FILE__);
@@ -432,7 +430,7 @@ class GoogleAgenda {
      */
     public function __construct($sFeed, $bFull = true) {
         if ($bFull) {
-            $sFeed = mb_strrchr($sFeed, 'basic', true) . 'full';
+             $sFeed = mb_strrchr($sFeed, 'basic', true) . 'full';
         }
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
@@ -546,7 +544,6 @@ class GoogleAgenda {
                 (!empty($this->_bFutureEvents) ? 'futureevents=' . $this->_bFutureEvents . '&' : '' ) .
                 (!empty($this->_sTimezone) ? 'ctz=' . $this->_sTimezone . '&' : '' ) .
                 (!empty($this->_bShowDeleted) ? 'showdeleted=' . $this->_bShowDeleted . '&' : '' );
-
         $this->loadUrl($sUrl);
 
         return $this->_aEvents;
