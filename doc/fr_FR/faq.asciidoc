@@ -1,2 +1,5 @@
-Peut on avoir les futurs evenements:::
+[panel,primary]
+.Peut on avoir les futurs evenements
+--
 Non ce n'est pas possible le plugin ne donne que les évenements en cours
+--
