@@ -62,8 +62,8 @@ class gCalendarCmd extends cmd {
             $oAgenda = new GoogleAgenda($this->getConfiguration('calendarUrl'),false);
             // Le tableau d'options suivant contient les valeurs par défaut
             $aEvents = $oAgenda->getEvents(array(
-                'startmin' => date('Y-m-d\TH:i:00'),
-                'startmax' => date('Y-m-d\TH:i:59'),
+                'startmin' => gmdate('Y-m-d\TH:i:00'),
+                'startmax' => gmdate('Y-m-d\TH:i:59'),
                 'sortorder' => 'ascending',
                 'orderby' => 'starttime',
                 'maxresults' => '20',
