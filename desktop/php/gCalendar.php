@@ -6,7 +6,7 @@ sendVarToJS('eqType', 'gCalendar');
 ?>
 
 <div class="row row-overflow">
-    <div class="col-lg-2">
+    <div class="col-lg-2 col-md-3 col-sm-4">
         <div class="bs-sidebar">
             <ul id="ul_eqLogic" class="nav nav-list bs-sidenav">
                 <a class="btn btn-default eqLogicAction" style="width : 100%;margin-top : 5px;margin-bottom: 5px;" data-action="add"><i class="fa fa-plus-circle"></i> {{Ajouter un agenda}}</a>
@@ -20,20 +20,20 @@ sendVarToJS('eqType', 'gCalendar');
         </div>
     </div>
 
-    <div class="col-lg-10 eqLogic" style="border-left: solid 1px #EEE; padding-left: 25px;display: none;">
+    <div class="col-lg-10 col-md-9 col-sm-8 eqLogic" style="border-left: solid 1px #EEE; padding-left: 25px;display: none;">
         <form class="form-horizontal">
             <fieldset>
                 <legend>{{Général</legend>
                 <div class="form-group">
-                    <label class="col-lg-3 control-label">{{Nom de l'équipement}}</label>
-                    <div class="col-lg-3">
+                    <label class="col-sm-3 control-label">{{Nom de l'équipement}}</label>
+                    <div class="col-sm-3">
                         <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
                         <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="Nom de l'équipement gCalendar"/>
                     </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-lg-4 control-label" >{{Objet parent}}</label>
-                        <div class="col-lg-8">
+                        <label class="col-sm-4 control-label" >{{Objet parent}}</label>
+                        <div class="col-sm-8">
                             <select class="eqLogicAttr form-control" data-l1key="object_id">
                                 <option value="">{{Aucun}}</option>
                                 <?php
@@ -45,12 +45,12 @@ sendVarToJS('eqType', 'gCalendar');
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-lg-4 control-label">{{Activer}}</label>
-                        <div class="col-lg-1">
+                        <label class="col-sm-4 control-label">{{Activer}}</label>
+                        <div class="col-sm-1">
                             <input type="checkbox" class="eqLogicAttr" data-l1key="isEnable" checked/>
                         </div>
-                        <label class="col-lg-4 control-label">{{Visible}}</label>
-                        <div class="col-lg-1">
+                        <label class="col-sm-4 control-label">{{Visible}}</label>
+                        <div class="col-sm-1">
                             <input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>
                         </div>
                     </div>
