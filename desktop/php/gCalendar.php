@@ -23,37 +23,37 @@ sendVarToJS('eqType', 'gCalendar');
     <div class="col-lg-10 col-md-9 col-sm-8 eqLogic" style="border-left: solid 1px #EEE; padding-left: 25px;display: none;">
         <form class="form-horizontal">
             <fieldset>
-                <legend>{{Général</legend>
+                <legend>{{Général}}</legend>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{{Nom de l'équipement}}</label>
-                    <div class="col-sm-3">
+                    <label class="col-sm-2 control-label">{{Nom de l'équipement}}</label>
+                    <div class="col-sm-2">
                         <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
                         <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="Nom de l'équipement gCalendar"/>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" >{{Objet parent}}</label>
+                    <div class="col-sm-2">
+                        <select class="eqLogicAttr form-control" data-l1key="object_id">
+                            <option value="">{{Aucun}}</option>
+                            <?php
+                            foreach (object::all() as $object) {
+                                echo '<option value="' . $object->getId() . '">' . $object->getName() . '</option>';
+                            }
+                            ?>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-4 control-label" >{{Objet parent}}</label>
-                        <div class="col-sm-8">
-                            <select class="eqLogicAttr form-control" data-l1key="object_id">
-                                <option value="">{{Aucun}}</option>
-                                <?php
-                                foreach (object::all() as $object) {
-                                    echo '<option value="' . $object->getId() . '">' . $object->getName() . '</option>';
-                                }
-                                ?>
-                            </select>
-                        </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">{{Activer}}</label>
+                    <div class="col-sm-1">
+                        <input type="checkbox" class="eqLogicAttr" data-l1key="isEnable" checked/>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-4 control-label">{{Activer}}</label>
-                        <div class="col-sm-1">
-                            <input type="checkbox" class="eqLogicAttr" data-l1key="isEnable" checked/>
-                        </div>
-                        <label class="col-sm-4 control-label">{{Visible}}</label>
-                        <div class="col-sm-1">
-                            <input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>
-                        </div>
+                    <label class="col-sm-1 control-label">{{Visible}}</label>
+                    <div class="col-sm-1">
+                        <input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>
                     </div>
+                </div>
             </fieldset> 
         </form>
 
