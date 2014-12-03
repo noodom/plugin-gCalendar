@@ -1,5 +1,5 @@
 ﻿Pour le configurer c’est très simple il suffit de créer un équipement puis de lui rajouter autant de commandes que l’ont veut (on peut distinguer comme ça ses différents agenda).
 
-image::../images/gCalandar_screenshot1.JPG[]
+image::../images/gCalendar_screenshot1.jpg[]
 
 L'url de votre google agenda se trouve une fois sur Google Agenda dans Paramètres -> Agenda -> [Agenda voulu] -> Adresse privée XML
