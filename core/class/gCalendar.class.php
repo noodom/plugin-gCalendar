@@ -73,27 +73,29 @@ class gCalendarCmd extends cmd {
                 'futureevents' => 'false',
                 'timezone' => 'Europe/Paris',
                 'showdeleted' => 'false'
-            ));
-            $date = date('Y-m-d H:i:s');
-            $result = '';
+                ));
+            $time = mktime();
+            $result = array();
             foreach ($aEvents as $oEvent) {
-                $result .= $oEvent->getTitle() . ' - ';
-            }
-            if (trim($result) == '') {
-                return __('Aucun', __FILE__);
-            }
-            return trim($result, ' - ');
-        } catch (GoogleAgendaException $e) {
-            if ($this->getConfiguration('defaultValue') != '') {
-                log::add('gCalendar', 'error', 'URL non valide ou accès internet invalide : ' . $this->getConfiguration('calendarUrl'));
-            } else {
-                throw $e;
-            }
+                if ( strtotime ($oEvent->getStartDate()) <= $time || $time <= strtotime($oEvent->getEndDate()) ) {
+                   array_push($result, (string) $oEvent->getTitle());
+               }
+           }
+           if (count($result) == 0) {
+            return __('Aucun', __FILE__);
         }
-        return $this->getConfiguration('defaultValue');
+        return join(' - ', $result);
+    } catch (GoogleAgendaException $e) {
+        if ($this->getConfiguration('defaultValue') != '') {
+            log::add('gCalendar', 'error', 'URL non valide ou accès internet invalide : ' . $this->getConfiguration('calendarUrl'));
+        } else {
+            throw $e;
+        }
     }
+    return $this->getConfiguration('defaultValue');
+}
 
-    /*     * **********************Getteur Setteur*************************** */
+/*     * **********************Getteur Setteur*************************** */
 }
 
 /**
@@ -430,24 +432,24 @@ class GoogleAgenda {
      */
     public function __construct($sFeed, $bFull = true) {
         if ($bFull) {
-             $sFeed = mb_strrchr($sFeed, 'basic', true) . 'full';
-        }
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_URL, $sFeed);
-        curl_setopt($ch, CURLOPT_REFERER, $sFeed);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        $sFeedContent = curl_exec($ch);
-        curl_close($ch);
+           $sFeed = mb_strrchr($sFeed, 'basic', true) . 'full';
+       }
+       $ch = curl_init();
+       curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+       curl_setopt($ch, CURLOPT_HEADER, false);
+       curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+       curl_setopt($ch, CURLOPT_URL, $sFeed);
+       curl_setopt($ch, CURLOPT_REFERER, $sFeed);
+       curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+       $sFeedContent = curl_exec($ch);
+       curl_close($ch);
         //$sFeedContent = @file_get_contents($sFeed);
-        if ($sFeedContent !== false && !empty($sFeedContent)) {
-            $this->_sFeed = $sFeed;
-        } else {
-            throw new GoogleAgendaException(__('L\'url [', __FILE__) . $sFeed . __('] n\'est pas valide.', __FILE__));
-        }
+       if ($sFeedContent !== false && !empty($sFeedContent)) {
+        $this->_sFeed = $sFeed;
+    } else {
+        throw new GoogleAgendaException(__('L\'url [', __FILE__) . $sFeed . __('] n\'est pas valide.', __FILE__));
     }
+}
 
     /**
      * getteur de la date de maj de l'agenda
@@ -533,17 +535,17 @@ class GoogleAgenda {
 
         //construction de l'url avec les options reçus
         $sUrl = $this->_sFeed . '?' .
-                (!empty($this->_dStartMin) ? 'start-min=' . $this->_dStartMin . '&' : '' ) .
-                (!empty($this->_dStartMax) ? 'start-max=' . $this->_dStartMax . '&' : '' ) .
-                (!empty($this->_sSortorder) ? 'sortorder=' . $this->_sSortorder . '&' : '' ) .
-                (!empty($this->_sOrderby) ? 'orderby=' . $this->_sOrderby . '&' : '' ) .
-                (!empty($this->_iMaxResults) ? 'max-results=' . $this->_iMaxResults . '&' : '' ) .
-                (!empty($this->_iStartIndex) ? 'start-index=' . $this->_iStartIndex . '&' : '' ) .
-                (!empty($this->_sSearch) ? 'q=' . $this->_sSearch . '&' : '' ) .
-                (!empty($this->_bSingleEvents) ? 'singleevents=' . $this->_bSingleEvents . '&' : '' ) .
-                (!empty($this->_bFutureEvents) ? 'futureevents=' . $this->_bFutureEvents . '&' : '' ) .
-                (!empty($this->_sTimezone) ? 'ctz=' . $this->_sTimezone . '&' : '' ) .
-                (!empty($this->_bShowDeleted) ? 'showdeleted=' . $this->_bShowDeleted . '&' : '' );
+        (!empty($this->_dStartMin) ? 'start-min=' . $this->_dStartMin . '&' : '' ) .
+        (!empty($this->_dStartMax) ? 'start-max=' . $this->_dStartMax . '&' : '' ) .
+        (!empty($this->_sSortorder) ? 'sortorder=' . $this->_sSortorder . '&' : '' ) .
+        (!empty($this->_sOrderby) ? 'orderby=' . $this->_sOrderby . '&' : '' ) .
+        (!empty($this->_iMaxResults) ? 'max-results=' . $this->_iMaxResults . '&' : '' ) .
+        (!empty($this->_iStartIndex) ? 'start-index=' . $this->_iStartIndex . '&' : '' ) .
+        (!empty($this->_sSearch) ? 'q=' . $this->_sSearch . '&' : '' ) .
+        (!empty($this->_bSingleEvents) ? 'singleevents=' . $this->_bSingleEvents . '&' : '' ) .
+        (!empty($this->_bFutureEvents) ? 'futureevents=' . $this->_bFutureEvents . '&' : '' ) .
+        (!empty($this->_sTimezone) ? 'ctz=' . $this->_sTimezone . '&' : '' ) .
+        (!empty($this->_bShowDeleted) ? 'showdeleted=' . $this->_bShowDeleted . '&' : '' );
         $this->loadUrl($sUrl);
 
         return $this->_aEvents;
@@ -691,19 +693,19 @@ class GoogleAgenda {
         if (isset($oPerson->attendeeStatus)) {
             switch ($oPerson->attendeeStatus->attributes()->value) {
                 case 'http://schemas.google.com/g/2005#event.accepted' :
-                    $sStatus = __('Présent', __FILE__);
-                    break;
+                $sStatus = __('Présent', __FILE__);
+                break;
                 case 'http://schemas.google.com/g/2005#event.invited' :
-                    $sStatus = __('Invité', __FILE__);
-                    break;
+                $sStatus = __('Invité', __FILE__);
+                break;
                 case 'http://schemas.google.com/g/2005#event.declined' :
-                    $sStatus = __('Absent', __FILE__);
-                    break;
+                $sStatus = __('Absent', __FILE__);
+                break;
                 case 'http://schemas.google.com/g/2005#event.tentative' :
-                    $sStatus = __('Peut-être', __FILE__);
-                    break;
+                $sStatus = __('Peut-être', __FILE__);
+                break;
                 default :
-                    $sStatus = __('Présent', __FILE__);
+                $sStatus = __('Présent', __FILE__);
             }
         } else {
             $sStatus = __('Présent', __FILE__);
