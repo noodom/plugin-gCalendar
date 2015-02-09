@@ -82,12 +82,30 @@ $eqLogics = eqLogic::byType('gCalendar');
         </form>
 
         <legend>{{GCalendar}}</legend>
-        <div class="alert alert-info">{{L'URL de l'agenda google se trouve dans Paramètres>Agenda>[Agenda voulu]>Adresse privée XML}}</div>
+        <div class="alert alert-info">
+			{{L'URL de l'agenda google se trouve dans Paramètres>Agenda>[Agenda voulu]>Adresse privée XML<br/>
+			<br/>
+			Pour configurer les évènements récupérés de votre Google Agenda, et ce qui va s'afficher dans votre widget, vous pouvez choisir : <br/>
+			- "event courant" : affichage des évènements courants, avec séparateur tiret ' - ' ("ancien" fonctionnement) <br/>
+			- "event courant (avec heures)" : affichage des évènements courants, avec l'heure de début et fin de l'évènement <br/> 
+			- "event heure à venir" : affichage des évènements en cours et sur l'heure à venir, avec l'heure de début et de fin de l'évènement <br/>
+			- "event sur la journée" : affichage de tous les évènements de la journée, avec les heures de début et de fin <br/>
+			</br>
+			Vous pouvez aussi identifier votre "position" dans l'évènement en configurant "l'indicateur début/fin" (non disponible pour "event courant")<br/>
+			- non : seulement l'indicateur d'activité "[A]" est précisé <br/>
+			- oui : informe si l'évènement est dans sa 1ère minute ou sa dernière ([P][A] et [F][A]) }}</div>
         <a class="btn btn-success btn-sm cmdAction" data-action="add"><i class="fa fa-plus-circle"></i> {{Ajouter une commande google agenda}}</a><br/><br/>
         <table id="table_cmd" class="table table-bordered table-condensed">
             <thead>
                 <tr>
-                    <th>{{Nom}}</th><th>{{URL de l'agenda}}</th><th>{{Valeur par défaut}}</th><th></th>
+                    <th style="width: 3%;">{{Id}}</th>
+                    <th style="width: 15%;">{{Nom}}</th>
+					<th style="width: 25%;">{{URL de l'agenda}}</th>
+					<th style="width: 12%;">{{Valeur par défaut}}</th>
+					<th style="width: 17%;">{{Format donnée}}</th>
+					<th style="width: 8%;">{{Indic. début/fin}}</th>
+					<th style="width: 10%;">{{Afficher}}</th>
+					<th style="width: 10%;">{{Action}}</th>
                 </tr>
             </thead>
             <tbody>

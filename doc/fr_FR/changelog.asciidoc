@@ -1,0 +1,4 @@
+==== 09/02/2015
+
+1.0: version intégrant la gestion de 4 formats de gestion des données et d'affichage widget, avec indicateur d'état de l'évènement (merci à Abarrau)
+0.x: version intitiale

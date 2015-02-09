@@ -1,7 +1,8 @@
 == Google Agenda
 
 === Description
-Le plugin agenda permet de récupérer les événements de son Google Agenda. Il gère les multiples évènements en les séparant par une virgule (“,”) il ne reste plus qu’à tester la présence de l’évènement dans un scénario pour déclencher une action (il existe dans les scénarios l’opérateur ~ pour savoir si une chaîne de caractères en contient une autre)
+Le plugin agenda permet de récupérer les événements de son Google Agenda. Il gère les multiples évènements en les séparant par un tiret (“ - ”), dans une version simple du traitement de la donnée; mais d'autre format de données sont également disponible. 
+Il ne reste plus qu’à tester la présence de l’évènement dans un scénario pour déclencher une action (il existe dans les scénarios l’opérateur ~ pour savoir si une chaîne de caractères en contient une autre).
 
 '''
 === Configuration

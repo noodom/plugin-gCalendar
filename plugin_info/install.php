@@ -18,6 +18,10 @@
 
 require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
+// Définie le chemin des fichiers caches pour gCalendar //
+if (!defined('GCALENDAR_CACHE_PATH')) define('GCALENDAR_CACHE_PATH', dirname(__FILE__) . '/../../../tmp/gCalendar/');
+
+
 function gCalendar_install() {
     $cron = cron::byClassAndFunction('gCalendar', 'pull');
     if (!is_object($cron)) {
@@ -25,9 +29,15 @@ function gCalendar_install() {
         $cron->setClass('gCalendar');
         $cron->setFunction('pull');
         $cron->setEnable(1);
-        $cron->setSchedule('*/15 * * * *');
+        $cron->setTimeout(1);
+        $cron->setSchedule('* * * * *');
         $cron->save();
     }
+	// crée le répertoire d'installation //
+	if (!file_exists(GCALENDAR_CACHE_PATH)) {
+		if (mkdir(GCALENDAR_CACHE_PATH)===true) log::add('gCalendar','info','gCalendar_install(): Le répertoire ('.GCALENDAR_CACHE_PATH.') vient d\'être créé.');
+			else log::add('gCalendar','error','gCalendar_install(): Impossible de créer le répertoire: '.GCALENDAR_CACHE_PATH);
+	}
 }
 
 function gCalendar_update() {
@@ -38,7 +48,8 @@ function gCalendar_update() {
     $cron->setClass('gCalendar');
     $cron->setFunction('pull');
     $cron->setEnable(1);
-    $cron->setSchedule('*/15 * * * *');
+    $cron->setTimeout(1);
+    $cron->setSchedule('* * * * *');
     $cron->save();
     $cron->stop();
 }
@@ -48,6 +59,10 @@ function gCalendar_remove() {
     if (is_object($cron)) {
         $cron->remove();
     }
+	// supprimer les fichiers cache et le répertoire //
+	array_map('unlink', glob(GCALENDAR_CACHE_PATH."gCalendar_*.tmp.xml"));
+	if (rmdir(GCALENDAR_CACHE_PATH)===true) log::add('gCalendar','info','gCalendar_remove(): Le répertoire ('.GCALENDAR_CACHE_PATH.') et ses fichiers ont correctement été supprimés.');
+		else log::add('gCalendar','error','gCalendar_remove(): Impossible de supprimer le répertoire: '.GCALENDAR_CACHE_PATH);
 }
 
 ?>

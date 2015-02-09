@@ -3,3 +3,27 @@
 image::../images/gCalendar_screenshot1.jpg[]
 
 L'url de votre google agenda se trouve une fois sur Google Agenda dans Paramètres -> Agenda -> [Agenda voulu] -> Adresse privée XML
+
+Le plugin offre également 4 formats pour les données et donc l'affichage au niveau du widget : 
+	- version simple : affichage des évènements courants, avec séparateur tiret " - "
+	- version simple avec heure : affichage des évènements courants, avec l'heure de début et fin de l'évènement
+	- version prochaine heure : affichage des évènements en cours et sur l'heure à venir, avec l'heure de début et de fin de l'évènement
+	- version journée courante : affichage de tous les évènements de la journée, avec les heures de début et de fin
+
+Il est aussi possible d'avoir l'état de l'évènement :
+	- [A] pour indiquer que l'évènement est en cours; 
+	- [D][A] pour indiquer qu'on se trouve dans la 1ère minute de l'évènement (pour déclencher un ON par exemple); 
+		(remarque: 1 évènement qui ne dure qu'1 minute, l'état [D][A] sera le seul disponible);
+	- [F][A] pour indiquer qu'on se trouve dans la dernière minute de l'évènement (pour déclencher un OFF par exemple) ; cela signifie que l'action sera réalisé 1 minute avant l'heure configuré (exemple pour 18h, l'indicateur sera affiché à 17h59)
+
+Les indicateurs "minute début/fin" peuvent être désactivée. 
+
+Remarque : ces informations ne sont pas disponibles dans la "version simple". 
+
+Récupération des données : 
+Les données récupérées correspondent à une journée complète, mais sont récupérées toutes les 15 minutes (heures fixes, 00,15,30,45); elles sont ensuite mises en cache. 
+Si vous faites des modifications dans votre agenda Google, ils ne seront visibles qu'au moment d'une période de raffraichissement. (Le raffraichissement est également réalisée lors de l'enregistrement du plugin.)
+
+Le système vérifie toutes les minutes en cache s'il y a des évènements et précise l'état de l'évènement (en fonction du format choisit).
+Vous pouvez donc programmer des évènements à la minute prèt.
+En l'absence d'accès internet, le cache disponible est sur l'ensemble de la journée courante. 

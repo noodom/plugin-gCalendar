@@ -20,11 +20,13 @@ function addCmdToTable(_cmd) {
         var _cmd = {configuration: {}};
     }
     var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">';
-    tr += '<td>';
-    tr += '<input class="cmdAttr form-control input-sm" data-l1key="id" style="display : none;">';
-    tr += '<input class="cmdAttr form-control input-sm" data-l1key="name" style="width : 100px;"></td>';
+    tr += '<td><span class="cmdAttr" data-l1key="id" ></span></td>';
+    tr += '<td><input class="cmdAttr form-control input-sm" data-l1key="name" style="width : 100px;"></td>';
     tr += '<td><input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="calendarUrl" style="width : 98%;"></td>';
     tr += '<td><input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="defaultValue" style="width : 98%;"></td>';
+	tr += '<td><select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="viewStyle" style="width : 98%;">' + gCalendar_selectOpt_viewType() + '</select></td>';
+	tr += '<td><select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="indicDebFin" style="width : 98%;">' + gCalendar_selectOpt_indic() + '</select></td>';
+	tr += '<td><span><input type="checkbox" class="cmdAttr" data-l1key="isVisible" checked/> {{Afficher}}</span></td>';
     tr += '<td style="width : 100px;">';
     tr += '<input class="cmdAttr form-control input-sm" data-l1key="type" value="info" style="display : none;">';
     tr += '<input class="cmdAttr form-control input-sm" data-l1key="subType" value="string" style="display : none;">';
@@ -36,4 +38,25 @@ function addCmdToTable(_cmd) {
     tr += '</tr>';
     $('#table_cmd tbody').append(tr);
     $('#table_cmd tbody tr:last').setValues(_cmd, '.cmdAttr');
+}
+
+function gCalendar_selectOpt_viewType() {
+	var myOpt = [['current_titleOnly','event courant'],
+				['current_withHour','event courant (avec heures)'],
+				['1day_next1hour','event heure à venir'],
+				['1day_today','event sur la journée']];
+	var viewOpt = '';
+	for(var i=0;i<myOpt.length;i++) {
+		viewOpt += '<option value=\''+ myOpt[i][0] +'\'>'+ myOpt[i][1] +'</option>';
+	}
+	return viewOpt;
+}
+
+function gCalendar_selectOpt_indic() {
+	var myOpt = [[0,'non'],[1,'oui']];
+	var viewOpt = '';
+	for(var i=0;i<myOpt.length;i++) {
+		viewOpt += '<option value=\''+ myOpt[i][0] +'\'>'+ myOpt[i][1] +'</option>';
+	}
+	return viewOpt;
 }
