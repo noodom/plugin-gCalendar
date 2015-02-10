@@ -1,6 +1,6 @@
 <?php
 if (!isConnect('admin')) {
-    throw new Exception('{{401 - Accès non autorisé}}');
+	throw new Exception('{{401 - Accès non autorisé}}');
 }
 sendVarToJS('eqType', 'gCalendar');
 $eqLogics = eqLogic::byType('gCalendar');
@@ -13,35 +13,35 @@ $eqLogics = eqLogic::byType('gCalendar');
                 <a class="btn btn-default eqLogicAction" style="width : 100%;margin-top : 5px;margin-bottom: 5px;" data-action="add"><i class="fa fa-plus-circle"></i> {{Ajouter un agenda}}</a>
                 <li class="filter" style="margin-bottom: 5px;"><input class="filter form-control input-sm" placeholder="{{Rechercher}}" style="width: 100%"/></li>
                 <?php
-                foreach ($eqLogics as $eqLogic) {
-                    echo '<li class="cursor li_eqLogic" data-eqLogic_id="' . $eqLogic->getId() . '"><a>' . $eqLogic->getHumanName(true) . '</a></li>';
-                }
-                ?>
+foreach ($eqLogics as $eqLogic) {
+	echo '<li class="cursor li_eqLogic" data-eqLogic_id="' . $eqLogic->getId() . '"><a>' . $eqLogic->getHumanName(true) . '</a></li>';
+}
+?>
             </ul>
         </div>
     </div>
-    
+
      <div class="col-lg-10 col-md-9 col-sm-8 eqLogicThumbnailDisplay" style="border-left: solid 1px #EEE; padding-left: 25px;">
         <legend>{{Mes agendas Google}}
         </legend>
         <?php
-        if (count($eqLogics) == 0) {
-            echo "<br/><br/><br/><center><span style='color:#767676;font-size:1.2em;font-weight: bold;'>Vous n'avez encore d'agenda Google, cliquez à gauche sur le bouton ajouter un agenda pour commencer</span></center>";
-        } else {
-            ?>
+if (count($eqLogics) == 0) {
+	echo "<br/><br/><br/><center><span style='color:#767676;font-size:1.2em;font-weight: bold;'>Vous n'avez encore d'agenda Google, cliquez à gauche sur le bouton ajouter un agenda pour commencer</span></center>";
+} else {
+	?>
             <div class="eqLogicThumbnailContainer">
                 <?php
-                foreach ($eqLogics as $eqLogic) {
-                    echo '<div class="eqLogicDisplayCard cursor" data-eqLogic_id="' . $eqLogic->getId() . '" style="background-color : #ffffff; height : 200px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >';
-                    echo "<center>";
-                    echo '<img src="plugins/gCalendar/doc/images/gCalendar_icon.png" height="105" width="95" />';
-                    echo "</center>";
-                    echo '<span style="font-size : 1.1em;position:relative; top : 15px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;"><center>' . $eqLogic->getHumanName(true, true) . '</center></span>';
-                    echo '</div>';
-                }
-                ?>
+foreach ($eqLogics as $eqLogic) {
+		echo '<div class="eqLogicDisplayCard cursor" data-eqLogic_id="' . $eqLogic->getId() . '" style="background-color : #ffffff; height : 200px;margin-bottom : 10px;padding : 5px;border-radius: 2px;width : 160px;margin-left : 10px;" >';
+		echo "<center>";
+		echo '<img src="plugins/gCalendar/doc/images/gCalendar_icon.png" height="105" width="95" />';
+		echo "</center>";
+		echo '<span style="font-size : 1.1em;position:relative; top : 15px;word-break: break-all;white-space: pre-wrap;word-wrap: break-word;"><center>' . $eqLogic->getHumanName(true, true) . '</center></span>';
+		echo '</div>';
+	}
+	?>
             </div>
-        <?php } ?>
+        <?php }?>
     </div>
 
     <div class="col-lg-10 col-md-9 col-sm-8 eqLogic" style="border-left: solid 1px #EEE; padding-left: 25px;display: none;">
@@ -61,10 +61,10 @@ $eqLogics = eqLogic::byType('gCalendar');
                         <select class="eqLogicAttr form-control" data-l1key="object_id">
                             <option value="">{{Aucun}}</option>
                             <?php
-                            foreach (object::all() as $object) {
-                                echo '<option value="' . $object->getId() . '">' . $object->getName() . '</option>';
-                            }
-                            ?>
+foreach (object::all() as $object) {
+	echo '<option value="' . $object->getId() . '">' . $object->getName() . '</option>';
+}
+?>
                         </select>
                     </div>
                 </div>
@@ -78,7 +78,7 @@ $eqLogics = eqLogic::byType('gCalendar');
                         <input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>
                     </div>
                 </div>
-            </fieldset> 
+            </fieldset>
         </form>
 
         <legend>{{GCalendar}}</legend>
@@ -87,13 +87,13 @@ $eqLogics = eqLogic::byType('gCalendar');
 			<br/>
 			Pour configurer les évènements récupérés de votre Google Agenda, et ce qui va s'afficher dans votre widget, vous pouvez choisir : <br/>
 			- "event courant" : affichage des évènements courants, avec séparateur tiret ' - ' ("ancien" fonctionnement) <br/>
-			- "event courant (avec heures)" : affichage des évènements courants, avec l'heure de début et fin de l'évènement <br/> 
+			- "event courant (avec heures)" : affichage des évènements courants, avec l'heure de début et fin de l'évènement <br/>
 			- "event heure à venir" : affichage des évènements en cours et sur l'heure à venir, avec l'heure de début et de fin de l'évènement <br/>
 			- "event sur la journée" : affichage de tous les évènements de la journée, avec les heures de début et de fin <br/>
 			</br>
 			Vous pouvez aussi identifier votre "position" dans l'évènement en configurant "l'indicateur début/fin" (non disponible pour "event courant")<br/>
 			- non : seulement l'indicateur d'activité "[A]" est précisé <br/>
-			- oui : informe si l'évènement est dans sa 1ère minute ou sa dernière ([P][A] et [F][A]) }}</div>
+			- oui : informe si l'évènement est dans sa 1ère minute ou sa dernière ([D][A] et [F][A]) }}</div>
         <a class="btn btn-success btn-sm cmdAction" data-action="add"><i class="fa fa-plus-circle"></i> {{Ajouter une commande google agenda}}</a><br/><br/>
         <table id="table_cmd" class="table table-bordered table-condensed">
             <thead>
@@ -124,5 +124,5 @@ $eqLogics = eqLogic::byType('gCalendar');
     </div>
 </div>
 
-<?php include_file('desktop', 'gCalendar', 'js', 'gCalendar'); ?>
-<?php include_file('core', 'plugin.template', 'js'); ?>
+<?php include_file('desktop', 'gCalendar', 'js', 'gCalendar');?>
+<?php include_file('core', 'plugin.template', 'js');?>
