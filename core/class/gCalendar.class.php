@@ -100,7 +100,7 @@ class gCalendar extends eqLogic {
 			'#refreshDate#' => (!empty($this->_sRefreshDate)) ? $this->_sRefreshDate : date('Y-m-d H:i:s'),
 			'#today#' => ($_version == 'mobile') ? date('d') : date('j M Y (\SW)'),
 			'#gCalArray#' => '0',
-		);
+			);
 		// pour chaque calendrier du widget //
 		// 0:nom jeedom / 1:type de vue / 2:date de mise à jour / 3:valeur affichée / 4:titre google / 5:url / 6:nb évènement //
 		$nbCalRefresh = 0;
@@ -236,82 +236,83 @@ class gCalendarCmd extends cmd {
 				case "current_withHour":
 				case "current_titleOnly":
 				default: $ts_s=mktime(); $ts_e=strtotime("+".(current(explode(';',GCALENDAR_REFRESH_TIME))+1)." minutes");
-				}*/
-				$ts_s = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
-				$ts_e = mktime(23, 59, 59, date('m'), date('d'), date('Y'));
-				log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute() Période récupérée:' . gmdate('Y-m-d\TH:i:00', $ts_s) . ' à ' . gmdate('Y-m-d\TH:i:59', $ts_e));
-				// définie les options d'entrée du filtre //
-				$_optFilter = array(
-					'startmin' => gmdate('Y-m-d\TH:i:00', $ts_s),
-					'startmax' => gmdate('Y-m-d\TH:i:59', $ts_e),
-					'sortorder' => 'ascending',
-					'orderby' => 'starttime',
-					'maxresults' => '20',
-					'startindex' => '1',
-					'search' => '',
-					'singleevents' => 'true',
-					'futureevents' => 'false',
-					'timezone' => 'Europe/Paris',
-					'showdeleted' => 'false',
+			}*/
+			$ts_s = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
+			$ts_e = mktime(23, 59, 59, date('m'), date('d'), date('Y'));
+			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute() Période récupérée:' . gmdate('Y-m-d\TH:i:00', $ts_s) . ' à ' . gmdate('Y-m-d\TH:i:59', $ts_e));
+			$_sTimeZone=config::byKey('timezone');
+			// définie les options d'entrée du filtre //
+			$_optFilter = array(
+				'startmin' => gmdate('Y-m-d\TH:i:00', $ts_s),
+				'startmax' => gmdate('Y-m-d\TH:i:59', $ts_e),
+				'sortorder' => 'ascending',
+				'orderby' => 'starttime',
+				'maxresults' => '20',
+				'startindex' => '1',
+				'search' => '',
+				'singleevents' => 'true',
+				'futureevents' => 'false',
+				'timezone' => ($_sTimeZone!='')?$_sTimeZone:'Europe/Paris',
+				'showdeleted' => 'false',
 				);
-				$this->execRefreshCache($_optFilter);
-			}
+			$this->execRefreshCache($_optFilter);
+		}
 			// analyse du fichier en cache //
-			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute().fileCache=' . $fileCache);
-			$oAgenda = new JeeGoogleAgenda($fileCache, false, true);
+		log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute().fileCache=' . $fileCache);
+		$oAgenda = new JeeGoogleAgenda($fileCache, false, true);
 			// récupère les évènements (sans parémètre, car n'utilise pas le filtre dans la class) //
-			$aEvents = $oAgenda->getEvents();
+		$aEvents = $oAgenda->getEvents();
 			//log::add('gCalendar','debug','['.$this->eqLogic_id.'|'.$this->id.'] execute().oAgenda='.print_r($oAgenda,true));
-			if ($this->_bRefreshedCache) {
-				log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute()._sGCalTitle=' . $this->getConfiguration('_sGCalTitle', '0') . ' - getTitle()=' . $oAgenda->getTitle());
-				if ($this->getConfiguration('_sGCalTitle', '0') != $oAgenda->getTitle()) {$this->setConfiguration('_sGCalTitle', $oAgenda->getTitle());}
-				if ($this->getConfiguration('_sGCalUrlCalendar', '0') != $oAgenda->getUrlPublic()) {$this->setConfiguration('_sGCalUrlCalendar', $oAgenda->getUrlPublic());}
-			}
+		if ($this->_bRefreshedCache) {
+			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute()._sGCalTitle=' . $this->getConfiguration('_sGCalTitle', '0') . ' - getTitle()=' . $oAgenda->getTitle());
+			if ($this->getConfiguration('_sGCalTitle', '0') != $oAgenda->getTitle()) {$this->setConfiguration('_sGCalTitle', $oAgenda->getTitle());}
+			if ($this->getConfiguration('_sGCalUrlCalendar', '0') != $oAgenda->getUrlPublic()) {$this->setConfiguration('_sGCalUrlCalendar', $oAgenda->getUrlPublic());}
+		}
 			//log::add('gCalendar','debug','execute().aEvents:'.print_r($aEvents,true));
-			$result = array();
-			foreach ($aEvents as $oEvent) {
-				$sEventStartDate = (string) $oEvent->getStartDate();
-				$sEventEndDate = (string) $oEvent->getEndDate();
-				log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '|' . $oEvent->getTitle() . '] execute().sEventStartDate=' . $sEventStartDate . ', sEventEndDate=' . $sEventEndDate);
-				if ((!empty($sEventStartDate)) && (!empty($sEventEndDate))) {
-					if (strtotime($sEventStartDate) <= strtotime($sEventEndDate)) {
-						$_aFormatedEvent = $this->formatData($oEvent, $sEventStartDate, $sEventEndDate);
-						if (isset($_aFormatedEvent['t'])) {
-							array_push($result, $_aFormatedEvent);
-						}
+		$result = array();
+		foreach ($aEvents as $oEvent) {
+			$sEventStartDate = (string) $oEvent->getStartDate();
+			$sEventEndDate = (string) $oEvent->getEndDate();
+			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '|' . $oEvent->getTitle() . '] execute().sEventStartDate=' . $sEventStartDate . ', sEventEndDate=' . $sEventEndDate);
+			if ((!empty($sEventStartDate)) && (!empty($sEventEndDate))) {
+				if (strtotime($sEventStartDate) <= strtotime($sEventEndDate)) {
+					$_aFormatedEvent = $this->formatData($oEvent, $sEventStartDate, $sEventEndDate);
+					if (isset($_aFormatedEvent['t'])) {
+						array_push($result, $_aFormatedEvent);
+					}
 
-					} else {
-						log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '|' . $oEvent->getTitle() . '] execute(): la date de début (' . $sEventStartDate . ')est supérieure à la date de fin (' . $sEventEndDate . ') >> vérifier votre RDV dans l\'agent Google');
-					}
+				} else {
+					log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '|' . $oEvent->getTitle() . '] execute(): la date de début (' . $sEventStartDate . ')est supérieure à la date de fin (' . $sEventEndDate . ') >> vérifier votre RDV dans l\'agent Google');
 				}
-			}
-			if (count($result) == 0) {
-				return __(str_replace("'", "\'", $this->getConfiguration('defaultValue', 'Aucun')), __FILE__);
-			} else {
-				$view = '';
-				//log::add('gCalendar','debug','execute().result:'.print_r($result,true));
-				// Formate les évènements dans une variable affichable //
-				for ($i = 0; $i < count($result); $i++) {
-					if (isset($result[$i]['t'])) {
-						$view .= ($i != 0) ? $result[$i]['s'] : '';
-						$view .= (!empty($result[$i]['h'])) ? '(' . $result[$i]['h'] . ') ' : '';
-						$view .= (!empty($result[$i]['a'])) ? $result[$i]['a'] : '';
-						$view .= $result[$i]['t'];
-					}
-				}
-				return (!empty($view)) ? $view : $this->getConfiguration('defaultValue', 'Aucun');
-			}
-		} catch (GoogleAgendaException $e) {
-			if ($this->getConfiguration('defaultValue') != '') {
-				log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Problème de lecture des données en cache, URL/accès internet invalide.');
-			} else {
-				throw $e;
 			}
 		}
-		$_sExecCmd = $this->execCmd();
-		log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Conservation et utilisation des données connues en cache...');
-		return (!empty($_sExecCmd)) ? $_sExecCmd : $this->getConfiguration('defaultValue', 'Aucun');
+		if (count($result) == 0) {
+			return __(str_replace("'", "\'", $this->getConfiguration('defaultValue', 'Aucun')), __FILE__);
+		} else {
+			$view = '';
+				//log::add('gCalendar','debug','execute().result:'.print_r($result,true));
+				// Formate les évènements dans une variable affichable //
+			for ($i = 0; $i < count($result); $i++) {
+				if (isset($result[$i]['t'])) {
+					$view .= ($i != 0) ? $result[$i]['s'] : '';
+					$view .= (!empty($result[$i]['h'])) ? '(' . $result[$i]['h'] . ') ' : '';
+					$view .= (!empty($result[$i]['a'])) ? $result[$i]['a'] : '';
+					$view .= $result[$i]['t'];
+				}
+			}
+			return (!empty($view)) ? $view : $this->getConfiguration('defaultValue', 'Aucun');
+		}
+	} catch (GoogleAgendaException $e) {
+		if ($this->getConfiguration('defaultValue') != '') {
+			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Problème de lecture des données en cache, URL/accès internet invalide.');
+		} else {
+			throw $e;
+		}
 	}
+	$_sExecCmd = $this->execCmd();
+	log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Conservation et utilisation des données connues en cache...');
+	return (!empty($_sExecCmd)) ? $_sExecCmd : $this->getConfiguration('defaultValue', 'Aucun');
+}
 
 	/**
 	 * Définit le format de la donnée (pour affichage ensuite dans le widget)
@@ -356,7 +357,7 @@ class gCalendarCmd extends cmd {
 				}
 				break;
 			case "current_titleOnly":
-			default:
+				default:
 				if (($sNewStart <= $tsNow) && ($tsNow <= $sNewEnd)) {
 					log::add('gCalendar', 'debug', '[' . $oEvent->getTitle() . '] execute() add Event - start:' . $sNewStart . ' - end:' . $sNewEnd);
 					$array = array('t' => $title, 'h' => '', 'a' => '', 's' => ' - ');
@@ -433,9 +434,10 @@ class gCalendarCmd extends cmd {
 		(!empty($_bFutureEvents) ? 'futureevents=' . $_bFutureEvents . '&' : '') .
 		(!empty($_sTimezone) ? 'ctz=' . $_sTimezone . '&' : '') .
 		(!empty($_bShowDeleted) ? 'showdeleted=' . $_bShowDeleted . '&' : '');
-
+		log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] loadSaveXML()._sGCalUrl=' . $_sGCalUrl);
+		
 		// définie les paramètres de timeout //
-		$_sCtxt = stream_context_create(array('http' => array('timeout' => 15)));
+		$_sCtxt = stream_context_create(array('http' => array('timeout' => 15, 'header'=>"Accept-language: fr\r\n")));
 		// recupère le contenu du flux pour le mettre dans un fichier //
 		$_sXmlGC = '';
 		$_fGC = fopen($_sGCalUrl, "r", false, $_sCtxt);
@@ -1104,19 +1106,19 @@ class GoogleAgenda {
 		if (isset($oPerson->attendeeStatus)) {
 			switch ($oPerson->attendeeStatus->attributes()->value) {
 				case 'http://schemas.google.com/g/2005#event.accepted':
-					$sStatus = __('Présent', __FILE__);
-					break;
+				$sStatus = __('Présent', __FILE__);
+				break;
 				case 'http://schemas.google.com/g/2005#event.invited':
-					$sStatus = __('Invité', __FILE__);
-					break;
+				$sStatus = __('Invité', __FILE__);
+				break;
 				case 'http://schemas.google.com/g/2005#event.declined':
-					$sStatus = __('Absent', __FILE__);
-					break;
+				$sStatus = __('Absent', __FILE__);
+				break;
 				case 'http://schemas.google.com/g/2005#event.tentative':
-					$sStatus = __('Peut-être', __FILE__);
-					break;
+				$sStatus = __('Peut-être', __FILE__);
+				break;
 				default:
-					$sStatus = __('Présent', __FILE__);
+				$sStatus = __('Présent', __FILE__);
 			}
 		} else {
 			$sStatus = __('Présent', __FILE__);
@@ -1245,7 +1247,7 @@ class JeeGoogleAgenda extends GoogleAgenda {
 	 *	Retourne le numéro du mois
 	 *	@param string $m mois abrégé en français, reçu de Google
 	 */
-	public function getMonthNumber($m = 0) {
+	public function getMonthNumber($m=0) {
 		//$month = array('Janv','Févr','Mars','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc');
 		$month = array('Janv', 'Fevr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Aout', 'Sept', 'Oct', 'Nov', 'Dec');
 		$m = (array_search($m, $month) + 1);
