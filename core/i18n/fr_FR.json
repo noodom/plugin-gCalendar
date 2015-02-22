@@ -26,5 +26,9 @@
     "plugins\/gCalendar\/desktop\/js\/gCalendar.js": {
         "Afficher": "Afficher",
         "Tester": "Tester"
+    },
+    "plugins\/gCalendar\/plugin_info\/info.xml": {
+        "Plugin pour lire les evenements de google Agenda": "Plugin pour lire les evenements de google Agenda",
+        "Aucune": "Aucune"
     }
 }
