@@ -28,6 +28,12 @@ if (!defined('GCALENDAR_CACHE_PATH')) {
 if (!defined('GCALENDAR_REFRESH_TIME')) {
 	define('GCALENDAR_REFRESH_TIME', '15;30;45;00');
 }
+// Définie le texte par défaut à afficher (cas d'erreur) //
+if (!defined('GCALENDAR_TXT_DV')) {
+	define('GCALENDAR_TXT_DV', __('Aucun', __FILE__));
+}
+
+
 
 /**
  * Class Extend eqLogic pour le plugin gCalendar
@@ -61,19 +67,19 @@ class gCalendar extends eqLogic {
 						$cmd->event($value);
 						$_bDoRefresh = true;
 					}
-					//log::add('gCalendar','debug','['.$gCalendar->getId().'] pull().execCmd() after='.$cmd->execCmd());
-					//log::add('gCalendar','debug','['.$gCalendar->getId().'] pull().cmd objet='.print_r($cmd, true));
 				}
-				if (($gCalendar->getIsVisible()) && (($_bDoRefresh) || (date('H:i') === '00:00'))) {
-					log::add('gCalendar', 'debug', '[' . $gCalendar->getId() . '] pull() remove cache and refreshWidget ...');
-					$mc = cache::byKey('gcalendarWidgetmobile' . $gCalendar->getId());
-					$mc->remove();
-					$mc = cache::byKey('gcalendarWidgetdashboard' . $gCalendar->getId());
-					$mc->remove();
-					$gCalendar->_sRefreshDate = date('Y-m-d H:i:s'); //je rajoute cette action, car la fonction getCollectDate() ne me retourne rien (?) //
-					$gCalendar->toHtml('mobile');
-					$gCalendar->toHtml('dashboard');
-					$gCalendar->refreshWidget();
+				if ($gCalendar->getConfiguration('widgetOther') != '1'){
+					if (($gCalendar->getIsVisible()) && (($_bDoRefresh) || (date('H:i') === '00:00'))) {
+						log::add('gCalendar', 'debug', '[' . $gCalendar->getId() . '] pull() remove cache and refreshWidget ...');
+						$mc = cache::byKey('gcalendarWidgetmobile' . $gCalendar->getId());
+						$mc->remove();
+						$mc = cache::byKey('gcalendarWidgetdashboard' . $gCalendar->getId());
+						$mc->remove();
+						$gCalendar->_sRefreshDate = date('Y-m-d H:i:s'); //je rajoute cette action, car la fonction getCollectDate() ne me retourne rien (?) //
+						$gCalendar->toHtml('mobile');
+						$gCalendar->toHtml('dashboard');
+						$gCalendar->refreshWidget();
+					}
 				}
 			}
 		}
@@ -81,11 +87,29 @@ class gCalendar extends eqLogic {
 	}
 
 	/**
+	 * Définie le format de la date du jour (externalisée pour prise en compte du language).
+	 * @return string
+	 */
+	public function getToday() {
+		$month = array(__('Janv', __FILE__), __('Fév', __FILE__), __('Mars', __FILE__), __('Avril', __FILE__), __('Mai', __FILE__), 
+						__('Juin', __FILE__), __('Juil', __FILE__), __('Août', __FILE__), __('Sept', __FILE__), __('Oct', __FILE__), 
+						__('Nov', __FILE__), __('Déc', __FILE__));
+		// date('j M Y (\SW)')
+		return date('j').' '.$month[(date('m')-1)].' '.date('Y').' ('.__('S', __FILE__).date('W').')';
+	}
+	
+	/**
 	 * Format le Widget "gCalendar"
 	 * @return void
 	 */
 	public function toHtml($_version) {
 		log::add('gCalendar', 'debug', '[' . $this->getId() . '] toHtml(' . $_version . ') start ...');
+		// utilisation du widget "standard" jeedom //
+		if ($this->getConfiguration('widgetOther') == '1'){
+			log::add('gCalendar', 'debug', '[' . $this->getId() . '] toHtml(' . $_version . ') use jeedom widget (no plugin widget).');
+			return parent::toHtml($_version);
+		}
+		// utilisation du widget du plugin //
 		$_version = jeedom::versionAlias($_version);
 		$mc = cache::byKey('gcalendarWidget' . $_version . $this->getId());
 		if ($mc->getValue() != '') {
@@ -98,9 +122,25 @@ class gCalendar extends eqLogic {
 			'#background_color#' => $this->getBackgroundColor($_version),
 			'#eqLink#' => $this->getLinkToConfiguration(),
 			'#refreshDate#' => (!empty($this->_sRefreshDate)) ? $this->_sRefreshDate : date('Y-m-d H:i:s'),
-			'#today#' => ($_version == 'mobile') ? date('d') : date('j M Y (\SW)'),
+			'#today#' => ($_version == 'mobile') ? date('d') : $this->getToday(),
+			'#txtToday#' => __("aujourd'hui", __FILE__),
+			'#txtView#' => __("affichage", __FILE__),
+			'#txtGotoAG#' => __("voir Agenda Google", __FILE__),
+			'#txtDay#' => __("journée", __FILE__),
+			'#txtNextHour#' => __("prochaine heure", __FILE__),
+			'#txtNow#' => __("instantané", __FILE__),
 			'#gCalArray#' => '0',
 			);
+		// action sur l'affichage du nom //
+		if (($_version == 'dview' || $_version == 'mview') && $this->getDisplay('doNotShowNameOnView') == 1) {
+			$replace['#name#'] = '';
+		}
+		if ($_version == 'dashboard' && $this->getDisplay('doNotShowNameOnDashboard') == 1) {
+			$replace['#name#'] = '';
+		}
+		if ($_version == 'mobile' && $this->getDisplay('doNotShowNameOnMobile') == 1) {
+			$replace['#name#'] = '';
+		}
 		// pour chaque calendrier du widget //
 		// 0:nom jeedom / 1:type de vue / 2:date de mise à jour / 3:valeur affichée / 4:titre google / 5:url / 6:nb évènement //
 		$nbCalRefresh = 0;
@@ -109,12 +149,12 @@ class gCalendar extends eqLogic {
 				if (($_sEvents = $cmdGCal->execCmd()) != '') {
 					if ($cmdGCal->getConfiguration('viewStyle') != 'current_titleOnly') {
 						$_aEvents = explode('||', $_sEvents);
-						$nbEvent = ($cmdGCal->getConfiguration('defaultValue', 'Aucun') != $_sEvents) ? count($_aEvents) : 0;
+						$nbEvent = ($cmdGCal->getConfiguration('defaultValue', GCALENDAR_TXT_DV) != $_sEvents) ? count($_aEvents) : 0;
 						if ($nbEvent > 0) {
 							for ($i = 0; $i < count($_aEvents); $i++) {
 								if ($_version == 'mobile') {
 									if (date('Hi') < str_replace(":", "", substr($_aEvents[$i], 7, 5))) {
-										$_aEvents[$i] = "<div style='font-size:13px;'>" . $_aEvents[$i] . "</div>";
+										$_aEvents[$i] = "<div class='gCalendar_itemActif'>" . $_aEvents[$i] . "</div>";
 									} else {
 										$_aEvents[$i] = '';
 										$nbEvent--;
@@ -122,30 +162,30 @@ class gCalendar extends eqLogic {
 								} else {
 									$_sBorder = 'border-bottom:1px solid #DDDDDD;';
 									if (date('Hi') >= str_replace(":", "", substr($_aEvents[$i], 7, 5))) {
-										$_aEvents[$i] = "<div style='font-style:italic;font-size:12px;color:#BBBBBB;" . $_sBorder . "'>" . $_aEvents[$i] . "</div>";
+										$_aEvents[$i] = "<div class='gCalendar_itemInactif' style='font-style:italic;color:#BBBBBB;" . $_sBorder . "'>" . $_aEvents[$i] . "</div>";
 									} else {
-										$_aEvents[$i] = "<div style='font-style:none;font-size:12px;color:#666666;" . $_sBorder . "'>" . $_aEvents[$i] . "</div>";
+										$_aEvents[$i] = "<div class='gCalendar_itemActif' style='" . $_sBorder . "'>" . $_aEvents[$i] . "</div>";
 									}
 								}
 							}
 							$_sEvents = implode('', $_aEvents);
-							$_sEvents = str_replace(" [D][A] ", " <i class='fa fa-plus-circle' title='évènement actif: 1ère minute' style='font-size:13px;color:#FF0000;'></i> ", $_sEvents);
-							$_sEvents = str_replace(" [F][A] ", " <i class='fa fa-ban' title='évènement actif: dernière minute' style='font-size:13px;color:#FF0000;'></i> ", $_sEvents);
-							$_sEvents = str_replace(" [A] ", " <i class='fa fa-check-circle-o' title='évènement actif' style='font-size:13px;color:#0000FF;'></i> ", $_sEvents);
+							$_sEvents = str_replace(" [D][A] ", " <i class='fa fa-plus-circle' title='".__('évènement actif: 1ère minute', __FILE__)."' style='color:#FF0000;'></i> ", $_sEvents);
+							$_sEvents = str_replace(" [F][A] ", " <i class='fa fa-ban' title='".__('évènement actif: dernière minute', __FILE__)."' style='color:#FF0000;'></i> ", $_sEvents);
+							$_sEvents = str_replace(" [A] ", " <i class='fa fa-check-circle-o' title='".__('évènement actif', __FILE__)."' style='color:#0000FF;'></i> ", $_sEvents);
 						} else {
 							if ($_version == 'mobile') {
-								$_sEvents = "<div style='font-size:13px;'>" . $_sEvents . "</div>";
+								$_sEvents = "<div class='gCalendar_itemInactif'>" . $_sEvents . "</div>";
 							} else {
-								$_sEvents = "<span style='font-style:none;font-size:12px;color:#666666;'>" . $_sEvents . "</span>";
+								$_sEvents = "<span class='gCalendar_itemInactif'>" . $_sEvents . "</span>";
 							}
 						}
 					} else {
 						$_aEvents = explode(' - ', $_sEvents);
-						$nbEvent = ($cmdGCal->getConfiguration('defaultValue', 'Aucun') != $_sEvents) ? count($_aEvents) : 0;
+						$nbEvent = ($cmdGCal->getConfiguration('defaultValue', GCALENDAR_TXT_DV) != $_sEvents) ? count($_aEvents) : 0;
 						if ($_version == 'mobile') {
-							$_sEvents = "<div style='font-size:13px;'>" . $_sEvents . "</div>";
+							$_sEvents = "<div class='gCalendar_itemInactif'>" . $_sEvents . "</div>";
 						} else {
-							$_sEvents = "<div style='font-style:none;font-size:12px;color:#666666;'>" . $_sEvents . "</div>";
+							$_sEvents = "<div class='gCalendar_itemInactif'>" . $_sEvents . "</div>";
 						}
 					}
 					$_sEvents = str_replace('"', '\"', $_sEvents);
@@ -154,6 +194,12 @@ class gCalendar extends eqLogic {
 				}
 			}
 		}
+        $parameters = $this->getDisplay('parameters');
+        if (is_array($parameters)) {
+            foreach ($parameters as $key => $value) {
+                $replace['#' . $key . '#'] = $value;
+            }
+        }
 		log::add('gCalendar', 'debug', '[' . $this->getId() . '] toHtml().replace=' . print_r($replace, true));
 		$html = template_replace($replace, getTemplate('core', $_version, 'gCalendar', 'gCalendar'));
 		cache::set('gcalendarWidget' . $_version . $this->getId(), $html, 0);
@@ -169,10 +215,10 @@ class gCalendar extends eqLogic {
 		// création du repertoire cache s'il n'existe pas //
 		if (!file_exists(GCALENDAR_CACHE_PATH)) {
 			if (mkdir(GCALENDAR_CACHE_PATH) === true) {
-				log::add('gCalendar', 'info', '[' . $this->getId() . '] preSave(): Le répertoire (' . GCALENDAR_CACHE_PATH . ') vient d\'être créé.');
+				log::add('gCalendar', 'info', '[' . $this->getId() . '] preSave():'.__("Le répertoire suivant vient d'être créé", __FILE__).': '.GCALENDAR_CACHE_PATH);
 			} else {
-				log::add('gCalendar', 'error', '[' . $this->getId() . '] preSave(): Le répertoire (' . GCALENDAR_CACHE_PATH . ') n\'a pas put être créé.');
-				throw new Exception(__('Le répertoire (' . GCALENDAR_CACHE_PATH . ') n\'a pas put être créé', __FILE__));
+				log::add('gCalendar', 'error', '[' . $this->getId() . '] preSave(): '.__("Le répertoire suivant n'a pas put être créé", __FILE__).': '.GCALENDAR_CACHE_PATH);
+				throw new Exception(__("Le répertoire suivant n'a pas put être créé", __FILE__).': '.GCALENDAR_CACHE_PATH);
 			}
 		}
 		// suppression pour raffraichissement du widget //
@@ -208,10 +254,8 @@ class gCalendarCmd extends cmd {
 		}
 		// suppression du fichier pour permettre de regénérer le cache //
 		$this->deleteFileCache();
-//		if ($this->getIsEnable()) {
 		$this->setEventOnly(1);
 		$this->event($this->execute());
-//		}
 	}
 
 	/**
@@ -226,20 +270,11 @@ class gCalendarCmd extends cmd {
 		try {
 			// vérifie si le fichier local existe ou si heure/minute de rafraichissement du cache //
 			if ((!file_exists($fileCache)) || (in_array(date('i'), explode(';', GCALENDAR_REFRESH_TIME)) == true)) {
-				log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute() Lancement du traitement du fichier/cache ...');
+				log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute() Start work for cache file ...');
 				// définie la période à récupérer //
-				/*switch($this->getConfiguration('viewStyle')) {
-				case "1day_today":
-				$ts_s=mktime(0,0,0,date('m'),date('d'),date('Y')); $ts_e=mktime(23,59,59,date('m'),date('d'),date('Y')); break;
-				case "1day_next1hour":
-				$ts_s=mktime(); $ts_e=strtotime("+1 hours"); break;
-				case "current_withHour":
-				case "current_titleOnly":
-				default: $ts_s=mktime(); $ts_e=strtotime("+".(current(explode(';',GCALENDAR_REFRESH_TIME))+1)." minutes");
-			}*/
 			$ts_s = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
 			$ts_e = mktime(23, 59, 59, date('m'), date('d'), date('Y'));
-			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute() Période récupérée:' . gmdate('Y-m-d\TH:i:00', $ts_s) . ' à ' . gmdate('Y-m-d\TH:i:59', $ts_e));
+			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute() Hour period in download:' . gmdate('Y-m-d\TH:i:00', $ts_s) . ' to ' . gmdate('Y-m-d\TH:i:59', $ts_e));
 			$_sTimeZone=config::byKey('timezone');
 			// définie les options d'entrée du filtre //
 			$_optFilter = array(
@@ -262,7 +297,6 @@ class gCalendarCmd extends cmd {
 		$oAgenda = new JeeGoogleAgenda($fileCache, false, true);
 			// récupère les évènements (sans parémètre, car n'utilise pas le filtre dans la class) //
 		$aEvents = $oAgenda->getEvents();
-			//log::add('gCalendar','debug','['.$this->eqLogic_id.'|'.$this->id.'] execute().oAgenda='.print_r($oAgenda,true));
 		if ($this->_bRefreshedCache) {
 			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute()._sGCalTitle=' . $this->getConfiguration('_sGCalTitle', '0') . ' - getTitle()=' . $oAgenda->getTitle());
 			if ($this->getConfiguration('_sGCalTitle', '0') != $oAgenda->getTitle()) {$this->setConfiguration('_sGCalTitle', $oAgenda->getTitle());}
@@ -280,17 +314,15 @@ class gCalendarCmd extends cmd {
 					if (isset($_aFormatedEvent['t'])) {
 						array_push($result, $_aFormatedEvent);
 					}
-
 				} else {
-					log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '|' . $oEvent->getTitle() . '] execute(): la date de début (' . $sEventStartDate . ')est supérieure à la date de fin (' . $sEventEndDate . ') >> vérifier votre RDV dans l\'agent Google');
+					log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '|' . $oEvent->getTitle() . '] execute(): '.__("la date de début est supérieure à la date de fin", __FILE__).' (' . $sEventStartDate . '>' . $sEventEndDate . ') >> '.__("vérifier votre RDV dans l'agent Google", __FILE__));
 				}
 			}
 		}
 		if (count($result) == 0) {
-			return __(str_replace("'", "\'", $this->getConfiguration('defaultValue', 'Aucun')), __FILE__);
+			return __(str_replace("'", "\'", $this->getConfiguration('defaultValue', GCALENDAR_TXT_DV)), __FILE__);
 		} else {
 			$view = '';
-				//log::add('gCalendar','debug','execute().result:'.print_r($result,true));
 				// Formate les évènements dans une variable affichable //
 			for ($i = 0; $i < count($result); $i++) {
 				if (isset($result[$i]['t'])) {
@@ -300,18 +332,18 @@ class gCalendarCmd extends cmd {
 					$view .= $result[$i]['t'];
 				}
 			}
-			return (!empty($view)) ? $view : $this->getConfiguration('defaultValue', 'Aucun');
+			return (!empty($view)) ? $view : $this->getConfiguration('defaultValue', GCALENDAR_TXT_DV);
 		}
 	} catch (GoogleAgendaException $e) {
 		if ($this->getConfiguration('defaultValue') != '') {
-			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Problème de lecture des données en cache, URL/accès internet invalide.');
+			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Error with data in cache, url or internet access are down.');
 		} else {
 			throw $e;
 		}
 	}
 	$_sExecCmd = $this->execCmd();
-	log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Conservation et utilisation des données connues en cache...');
-	return (!empty($_sExecCmd)) ? $_sExecCmd : $this->getConfiguration('defaultValue', 'Aucun');
+	log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Use data in cache file ...');
+	return (!empty($_sExecCmd)) ? $_sExecCmd : $this->getConfiguration('defaultValue', GCALENDAR_TXT_DV);
 }
 
 	/**
@@ -387,17 +419,17 @@ class gCalendarCmd extends cmd {
 	 * @return void
 	 */
 	public function execRefreshCache($_optFilter) {
-		log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Rafraichissement du fichier cache ...');
+		log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execRefreshCache(): Refresh cache file ...');
 		$_sGCalUrl = $this->getConfiguration('calendarUrl');
 		if (!empty($_sGCalUrl)) {
 			if (!$this->loadSaveXML($_optFilter, $_sGCalUrl)) {
-				log::add('gCalendar', 'error', '[' . $this->eqLogic_id . '|' . $this->id . '] Impossible de récupérer le flux et de l\'enregistrer en cache.');
+				log::add('gCalendar', 'error', '[' . $this->eqLogic_id . '|' . $this->id . '] execRefreshCache(): error with the xml file from google Calendar, can not record it in cache file.');
 			} else {
 				$this->_bRefreshedCache = true;
-				log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '] Rafraichissement du fichier cache : OK.');
+				log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '] '.__("Rafraichissement du fichier cache : OK", __FILE__));
 			}
 		} else {
-			log::add('gCalendar', 'error', '[' . $this->eqLogic_id . '|' . $this->id . '] URL gCalendar vide');
+			log::add('gCalendar', 'error', '[' . $this->eqLogic_id . '|' . $this->id . '] URL gCalendar empty');
 		}
 	}
 
@@ -444,7 +476,7 @@ class gCalendarCmd extends cmd {
 		/*while (!feof($_fGC)) { $_sXmlGC .= fread($_fGC, 8192); }
 		fclose($_fGC);*/
 		if ($_fGC === false) {
-			log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '] Le flux (' . $_sGCalUrl . ') n\'est pas accéssible (error).');
+			log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '] '.__("Le flux suivant n'est pas accéssible", __FILE__).' (error):'. $_sGCalUrl);
 			return false;
 		} else {
 			while (!feof($_fGC)) {$_sXmlGC .= fread($_fGC, 8192);}
@@ -452,7 +484,7 @@ class gCalendarCmd extends cmd {
 			fclose($_fGC);
 			//log::add('gCalendar','debug','['.$this->eqLogic_id.'|'.$this->id.'] Retour du flux ='.print_r($_aInfo,true));
 			if ($_aInfo['timed_out'] > 0) {
-				log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '] Le flux (' . $_sGCalUrl . ') n\'est pas accéssible (timeout).');
+				log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '] '.__("Le flux suivant n'est pas accéssible", __FILE__).' (timeout):'. $_sGCalUrl);
 				return false;
 			}
 		}
@@ -467,16 +499,16 @@ class gCalendarCmd extends cmd {
 						mkdir(GCALENDAR_CACHE_PATH);
 					}
 					if (!file_exists(GCALENDAR_CACHE_PATH)) {
-						log::add('gCalendar', 'error', '[' . $this->eqLogic_id . '|' . $this->id . '] Impossible de creer le dossier : ' . GCALENDAR_CACHE_PATH . '.');
+						log::add('gCalendar', 'error', '[' . $this->eqLogic_id . '|' . $this->id . '] '.__("Impossible de créer le dossier", __FILE__).': '.GCALENDAR_CACHE_PATH);
 					}
 					if (file_put_contents(GCALENDAR_CACHE_PATH . $this->getFileCacheName(), $_sXmlGC) === false) {
-						log::add('gCalendar', 'error', '[' . $this->eqLogic_id . '|' . $this->id . '] Ecriture impossible dans le fichier : ' . GCALENDAR_CACHE_PATH . $this->getFileCacheName() . '.');
+						log::add('gCalendar', 'error', '[' . $this->eqLogic_id . '|' . $this->id . '] '.__("Ecriture impossible dans le fichier", __FILE__).': '. GCALENDAR_CACHE_PATH . $this->getFileCacheName() . '.');
 						return false;
 					}
-					log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Sauvegarde du flux en cache complète.');
+					log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] Save xml google calendar result in cache file: OK.');
 					return true;
 				} else {
-					log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '] Le flux récupéré ne correspond pas à un flux XML GCalendar.');
+					log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '] '.__("Le flux récupéré ne correspond pas à un flux XML GCalendar", __FILE__));
 				}
 			}
 		}
@@ -500,7 +532,7 @@ class gCalendarCmd extends cmd {
 	public function deleteFileCache() {
 		$fileCache = GCALENDAR_CACHE_PATH . $this->getFileCacheName();
 		if (file_exists($fileCache)) {
-			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] preSave() suppression du fichier (' . $fileCache . ')');
+			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] deleteFileCache(): delete cache file: ' . $fileCache);
 			unlink($fileCache);
 			return true;
 		}
@@ -858,7 +890,7 @@ class GoogleAgenda {
 		if ($sFeedContent !== false && !empty($sFeedContent)) {
 			$this->_sFeed = $sFeed;
 		} else {
-			throw new GoogleAgendaException(__('L\'url [', __FILE__) . $sFeed . __('] n\'est pas valide.', __FILE__));
+			throw new GoogleAgendaException(__("L'url suivante n'est pas valide", __FILE__).': '. $sFeed);
 		}
 	}
 
@@ -1161,7 +1193,7 @@ class JeeGoogleAgenda extends GoogleAgenda {
 			if (file_exists($sFeed)) {
 				$this->_sFeed = $sFeed;
 			} else {
-				throw new GoogleAgendaException(__('Le fichier [', __FILE__) . $sFeed . __('] n\'existe pas.', __FILE__));
+				throw new GoogleAgendaException(__("Le fichier n'existe pas", __FILE__).': '. $sFeed);
 			}
 		} else {
 			parent::__construct($sFeed, $bFull);
@@ -1234,7 +1266,7 @@ class JeeGoogleAgenda extends GoogleAgenda {
 						$oEvent->setEndDate(date($resMatsh[8] . '-' . $this->getMonthNumber($resMatsh[7]) . '-' . $resMatsh[6] . ' 23:59:59'));
 						log::add('gCalendar', 'debug', '[' . $oEvent->getTitle() . '] setEvent() (xj) start:' . date($resMatsh[4] . '-' . $this->getMonthNumber($resMatsh[3]) . '-' . $resMatsh[2] . ' 00:00:00') . ' - end:' . date($resMatsh[8] . '-' . $this->getMonthNumber($resMatsh[7]) . '-' . $resMatsh[6] . ' 23:59:59'));
 					} else {
-						log::add('gCalendar', 'info', '[' . $oEvent->getTitle() . '] setEvent() Le champ description(content) n\'est pas correctement formaté (impossible de déterminer les dates de l\'évènement).');
+						log::add('gCalendar', 'info', '[' . $oEvent->getTitle() . '] setEvent(): '. __("Le champ description(content) n'est pas correctement formaté (impossible de déterminer les dates de l'événement)", __FILE__));
 					}
 					//log::add('gCalendar','debug','['.$oEvent->getTitle().'] setEvent().preg_match='.print_r($resMatsh,true));
 				}
@@ -1248,7 +1280,6 @@ class JeeGoogleAgenda extends GoogleAgenda {
 	 *	@param string $m mois abrégé en français, reçu de Google
 	 */
 	public function getMonthNumber($m=0) {
-		//$month = array('Janv','Févr','Mars','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc');
 		$month = array('Janv', 'Fevr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Aout', 'Sept', 'Oct', 'Nov', 'Dec');
 		$m = (array_search($m, $month) + 1);
 		if (($m >= 1) && ($m <= 12)) {

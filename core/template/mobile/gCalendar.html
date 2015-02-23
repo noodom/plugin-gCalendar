@@ -7,19 +7,21 @@
 	/* Formate les données pour les afficher dans le calendrier */
 	// 0:nom jeedom / 1:type de vue / 2:date de mise à jour / 3:valeur affichée / 4:titre google / 5:url / 6:nb évènement //
 	function gCalendar_viewGCal(gCalData) {
-		var vHtml="<div class='tooltips' style='position:relative;padding:1px;margin:2px 2px 4px 2px;border-top:1px solid #FFFFFF;min-width:150px;'>";
-		vHtml +="<div style='padding-left:5px;font-weight:bold;font-size:15px;'>"+ gCalData[0] +"</div>";
-		vHtml +="<div style='vertical-align:middle;padding:3px;'>"+ gCalData[3] +"</div></div>"; 
+		var vHtml="<div class='tooltips gCalendar_cal' style='padding:1px;margin:2px 2px 4px 2px;border-top:1px solid #FFFFFF;min-width:150px;'>";
+		vHtml +="<div id='gCalendar_calTitle' style='padding-left:5px;font-weight:bold;'>"+ gCalData[0] +"</div>";
+		vHtml +="<div id='gCalendar_items' style='font-size:14px; padding:3px;'>"+ gCalData[3] +"</div></div>"; 
 		return vHtml;
 	}
 </script>
 
-<div class="eqLogic eqLogic-widget" style="width:220px;position:relative;background-color:#background_color#;" data-eqLogic_id="#id#" data-version="mobile">
-    <center>#name#</center>
-	<div style="position:relative;"><center><i class='icon divers-calendar2' style='font-size:3.5em;'></i></center><div style="position:absolute;top:0.7em;font-weight:bold;font-size:1.6em;width:100%;"><center><span style="padding:0px 10px 0px 9px;background-color:#background_color#;border:1px solid #FFFFFF;">#today#</span></center></div></div>
-	<div id="gCalendar_Div#id#" style='padding-top:5px;position:relative;'>
-		<div class='tooltips' style='font-size:12px;position:relative;padding:1px;margin:1px 5px 8px 5px;border:1px solid #777777;background-color:#FFFFFF;min-width:150px;'>
-			<center><span style='color:#000000;'>... setup ...</span></center>
+<div class="eqLogic eqLogic-widget gCalendar_mobile" style="width:220px;background-color:#background_color#; #style#" data-eqLogic_id="#id#" data-version="mobile">
+    <center><span class="gCalendar_title">#name#</span></center>
+	<div style="position:relative;"><center><i class='icon divers-calendar2' style='font-size:3.5em;'></i></center>
+		<div style="position:absolute;top:0.7em;font-weight:bold;font-size:1.6em;width:100%;"><center><span style="padding:0px 10px 0px 9px;border:1px solid #FFFFFF;background-color:#background_color#;#style#">#today#</span></center></div>
+	</div>
+	<div id="gCalendar_Div#id#" style='padding-top:5px;'>
+		<div class='tooltips' style='padding:1px;margin:1px 5px 8px 5px;border:1px solid #777777;background-color:#FFFFFF;color:#000000;'>
+			<center>... setup ...</center>
 		</div>
 	</div>
 	<script>

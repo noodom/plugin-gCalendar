@@ -26,7 +26,7 @@ foreach ($eqLogics as $eqLogic) {
         </legend>
         <?php
 if (count($eqLogics) == 0) {
-	echo "<br/><br/><br/><center><span style='color:#767676;font-size:1.2em;font-weight: bold;'>Vous n'avez encore d'agenda Google, cliquez à gauche sur le bouton ajouter un agenda pour commencer</span></center>";
+	echo "<br/><br/><br/><center><span style='color:#767676;font-size:1.2em;font-weight: bold;'>{{Vous n'avez encore d'agenda Google, cliquez à gauche sur le bouton ajouter un agenda pour commencer}}</span></center>";
 } else {
 	?>
             <div class="eqLogicThumbnailContainer">
@@ -68,6 +68,13 @@ foreach (object::all() as $object) {
                         </select>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" >{{Autre Widget}}</label>
+                    <div class="col-sm-2" style="width: 4%;">
+                        <input type="checkbox" class="eqLogicAttr" data-l1key="configuration"  data-l2key="widgetOther"  checked/>
+                    </div>
+					<span style="font-size: 75%;">({{A cocher si vous souhaitez utiliser un widget "personnel"; données brutes affichées dans ce cas. Laissez décocher pour utiliser le widget du plugin.}})</span>
+				</div>
                 <div class="form-group">
                     <label class="col-sm-2 control-label">{{Activer}}</label>
                     <div class="col-sm-1">

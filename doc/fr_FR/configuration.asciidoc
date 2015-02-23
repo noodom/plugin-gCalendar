@@ -27,3 +27,12 @@ Si vous faites des modifications dans votre agenda Google, ils ne seront visible
 Le système vérifie toutes les minutes en cache s'il y a des évènements et précise l'état de l'évènement (en fonction du format choisit).
 Vous pouvez donc programmer des évènements à la minute prèt.
 En l'absence d'accès internet, le cache disponible est sur l'ensemble de la journée courante. 
+
+L'option "Autre Widget", permet de désactiver le widget du plugin et donc de revenir à un affichage "standard"; permettant d'utiliser un widget personnel. 
+
+Class CSS disponibles pour personnaliser le widget du plugin : 
+- gCalendar_dashboard / gCalendar_mobile: type de vue
+- gCalendar_title: zone titre de la tuile
+- gCalendar_date: zone date de la tuile
+- gCalendar_calTitle: zone de titre du calendrier
+- gCalendar_items: zone d'information (globale) / gCalendar_itemActif : événement actif / gCalendar_itemInactif : événement inactif
