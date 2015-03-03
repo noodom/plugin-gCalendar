@@ -5,12 +5,14 @@ image::../images/gCalendar_screenshot1.jpg[]
 L'url de votre google agenda se trouve une fois sur Google Agenda dans Paramètres -> Agenda -> [Agenda voulu] -> Adresse privée XML
 
 Le plugin offre également 4 formats pour les données et donc l'affichage au niveau du widget : 
+
 	- version simple : affichage des évènements courants, avec séparateur tiret " - "
 	- version simple avec heure : affichage des évènements courants, avec l'heure de début et fin de l'évènement
 	- version prochaine heure : affichage des évènements en cours et sur l'heure à venir, avec l'heure de début et de fin de l'évènement
 	- version journée courante : affichage de tous les évènements de la journée, avec les heures de début et de fin
 
 Il est aussi possible d'avoir l'état de l'évènement :
+
 	- [A] pour indiquer que l'évènement est en cours; 
 	- [D][A] pour indiquer qu'on se trouve dans la 1ère minute de l'évènement (pour déclencher un ON par exemple); 
 		(remarque: 1 évènement qui ne dure qu'1 minute, l'état [D][A] sera le seul disponible);
@@ -31,8 +33,11 @@ En l'absence d'accès internet, le cache disponible est sur l'ensemble de la jou
 L'option "Autre Widget", permet de désactiver le widget du plugin et donc de revenir à un affichage "standard"; permettant d'utiliser un widget personnel. 
 
 Class CSS disponibles pour personnaliser le widget du plugin : 
+
 - gCalendar_dashboard / gCalendar_mobile: type de vue
 - gCalendar_title: zone titre de la tuile
 - gCalendar_date: zone date de la tuile
 - gCalendar_calTitle: zone de titre du calendrier
-- gCalendar_items: zone d'information (globale) / gCalendar_itemActif : événement actif / gCalendar_itemInactif : événement inactif
+- gCalendar_items: zone d'information (globale)
+- gCalendar_itemActif : événement actif 
+- gCalendar_itemInactif : événement inactif
