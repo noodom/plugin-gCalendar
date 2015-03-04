@@ -7,8 +7,7 @@ Dans le Widget oui en mode "journée". Par contre, le traitement de futurs évè
 [panel,primary]
 .Mes scénarios réagissent à des évènements passées ou futurs (mode prochaine heure ou journée)
 --
-Dans l'analyse de la trame, il faut vérifier que vous êtes sur un évènement actif; en vérifiant que [A] est présent.
-(exemple : '...'~'[A] mon event')
+Dans l'analyse de la trame, il faut vérifier que vous êtes sur un évènement actif; en vérifiant que [A] est présent.(exemple : '...'~'[A] mon event')
 --
 
 [panel,primary]
@@ -29,10 +28,14 @@ Même pour une configuration en "heure suivante", les informations affichées se
 [panel,primary]
 .Les bornes sont-elles incluses 
 --
-L'heure de début est incluse; la 1ère minute est "active" et remonte l'information [D][A]. (exemple: 10h-18h: 10h00 contient [D][A])
-L'heure de fin n'est pas incluse dans la période d'activité, c'est la dernière minute précédente qui présente l'information [F][A] ; sauf pour 23h59. 
-(exemple1: 10h-18h: 17h59 contient [F][A]; à 18h00 l'évènement est terminée et non actif, [A] n'est plus présent). 
-(exemple2: 19h-0h: l'heure de fin est converti en 23h59 et contient [F][A]; à 0h l'évènement est terminée et non actif, [A] n'est plus présent).
+L'heure de début est incluse; la 1ère minute est "active" et remonte l'information [D][A].
+
+ - exemple: 10h-18h: 10h00 contient [D][A]
+
+L'heure de fin n'est pas incluse dans la période d'activité, c'est la dernière minute précédente qui présente l'information [F][A] sauf pour 23h59.
+
+ - exemple1: 10h-18h: 17h59 contient [F][A] à 18h00 l'évènement est terminée et non actif, [A] n'est plus présent. 
+ - exemple2: 19h-0h: l'heure de fin est converti en 23h59 et contient [F][A] à 0h l'évènement est terminée et non actif, [A] n'est plus présent.
 --
 
 [panel,primary]
