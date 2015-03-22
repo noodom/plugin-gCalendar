@@ -69,13 +69,6 @@ foreach (object::all() as $object) {
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label" >{{Autre Widget}}</label>
-                    <div class="col-sm-2" style="width: 4%;">
-                        <input type="checkbox" class="eqLogicAttr" data-l1key="configuration"  data-l2key="widgetOther"  checked/>
-                    </div>
-					<span style="font-size: 75%;">({{A cocher si vous souhaitez utiliser un widget "personnel"; données brutes affichées dans ce cas. Laissez décocher pour utiliser le widget du plugin.}})</span>
-				</div>
-                <div class="form-group">
                     <label class="col-sm-2 control-label">{{Activer}}</label>
                     <div class="col-sm-1">
                         <input type="checkbox" class="eqLogicAttr" data-l1key="isEnable" checked/>
@@ -85,34 +78,62 @@ foreach (object::all() as $object) {
                         <input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>
                     </div>
                 </div>
+				<legend></legend>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" >{{Autre Widget}}</label>
+                    <div class="col-sm-2" style="width: 4%;">
+                        <input type="checkbox" class="eqLogicAttr" data-l1key="configuration"  data-l2key="widgetOther"  checked/>
+                    </div>
+					<span style="font-size: 80%;">({{A cocher si vous souhaitez utiliser un widget "personnel"; données brutes affichées dans ce cas. Laissez décocher pour utiliser le widget du plugin.}})</span>
+				</div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" >{{Ne pas afficher la date}}</label>
+                    <div class="col-sm-2" style="width: 4%;">
+                        <input type="checkbox" class="eqLogicAttr" data-l1key="configuration"  data-l2key="hideDateDashboard"  checked/>
+                    </div>
+					 <span style="font-size: 80%;">({{Uniquement pour le Dashboard et Vues}})</span>
+				</div>
+				<legend></legend>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" >{{Autorise les Scénarios}}</label>
+                    <div class="col-sm-2" style="width: 4%;">
+                        <input type="checkbox" class="eqLogicAttr" data-l1key="configuration"  data-l2key="acceptLaunchSc"  checked/>
+                    </div>
+					<span style="font-size: 80%;">({{Permet de lancer un scénario directement depuis le plugin gCalendar. La trame reçue de l'évènement doit être correctement formatée.}})</span><br/>
+					<i class="fa fa-magic cursor" style="color:#0000FF;" id="bt_helpForWriteGCalEvent"></i><span style="font-size:90%;color:#0000FF;"> : {{Aide à la saisie d'un événement dans Google}}</span>
+				</div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" >{{Fréquence de mise à jour du cache}}</label>
+                    <div class="col-sm-2">
+                        <select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="refreshPeriod">
+                            <option value="15">15 min.</option>
+                            <option value="30">30 min.</option>
+                            <option value="60">1 h.</option>
+                            <option value="180">3 h.</option>
+                            <option value="360">6 h.</option>
+                            <option value="720">12 h.</option>
+                            <option value="1440">24 h.</option>
+						</select>
+                    </div>
+				</div>
             </fieldset>
         </form>
 
         <legend>{{GCalendar}}</legend>
-        <div class="alert alert-info">
+        <div class="alert alert-info" style="font-size:90%;">
 			{{L'URL de l'agenda google se trouve dans Paramètres>Agenda>[Agenda voulu]>Adresse privée XML<br/>
 			<br/>
-			Pour configurer les évènements récupérés de votre Google Agenda, et ce qui va s'afficher dans votre widget, vous pouvez choisir : <br/>
-			- "event courant" : affichage des évènements courants, avec séparateur tiret ' - ' ("ancien" fonctionnement) <br/>
-			- "event courant (avec heures)" : affichage des évènements courants, avec l'heure de début et fin de l'évènement <br/>
-			- "event heure à venir" : affichage des évènements en cours et sur l'heure à venir, avec l'heure de début et de fin de l'évènement <br/>
-			- "event sur la journée" : affichage de tous les évènements de la journée, avec les heures de début et de fin <br/>
-			</br>
-			Vous pouvez aussi identifier votre "position" dans l'évènement en configurant "l'indicateur début/fin" (non disponible pour "event courant")<br/>
-			- non : seulement l'indicateur d'activité "[A]" est précisé <br/>
-			- oui : informe si l'évènement est dans sa 1ère minute ou sa dernière ([D][A] et [F][A]) }}</div>
+			- Pour les éléments de configuration, reportez-vous à la documentation.<br/>
+			- Pour une utilisation identique à la V1 du plugin, utiliser le format de donnée "event courant".}}</div>
         <a class="btn btn-success btn-sm cmdAction" data-action="add"><i class="fa fa-plus-circle"></i> {{Ajouter une commande google agenda}}</a><br/><br/>
         <table id="table_cmd" class="table table-bordered table-condensed">
             <thead>
                 <tr>
                     <th style="width: 3%;">{{Id}}</th>
-                    <th style="width: 15%;">{{Nom}}</th>
-					<th style="width: 25%;">{{URL de l'agenda}}</th>
-					<th style="width: 12%;">{{Valeur par défaut}}</th>
-					<th style="width: 17%;">{{Format donnée}}</th>
-					<th style="width: 8%;">{{Indic. début/fin}}</th>
-					<th style="width: 10%;">{{Afficher}}</th>
-					<th style="width: 10%;">{{Action}}</th>
+                    <th style="width: 37%;">{{Nom et URL}}</th>
+					<th style="width: 29%;">{{Données d'utilisation}}</th>
+					<th style="width: 23%;">{{Options graphique}}</th>
+					<th style="width: 8%;">{{Action}}</th>
                 </tr>
             </thead>
             <tbody>

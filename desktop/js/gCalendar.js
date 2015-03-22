@@ -15,27 +15,34 @@
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// pour l'ajout de commande //
 function addCmdToTable(_cmd) {
     if (!isset(_cmd)) {
         var _cmd = {configuration: {}};
     }
     var tr = '<tr class="cmd" data-cmd_id="' + init(_cmd.id) + '">';
     tr += '<td><span class="cmdAttr" data-l1key="id" ></span></td>';
-    tr += '<td><input class="cmdAttr form-control input-sm" data-l1key="name" style="width : 100px;"></td>';
-    tr += '<td><input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="calendarUrl" style="width : 98%;"></td>';
-    tr += '<td><input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="defaultValue" style="width : 98%;"></td>';
-	tr += '<td><select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="viewStyle" style="width : 98%;">';
-		tr += '<option value=\'current_titleOnly\'> {{event courant}} </option>';
-		tr += '<option value=\'current_withHour\'> {{event courant (avec heures)}} </option>';
-		tr += '<option value=\'1day_next1hour\'> {{event heure à venir}} </option>';
-		tr += '<option value=\'1day_today\'> {{event sur la journée}} </option>';
-	tr += '</select></td>';
-	tr += '<td><select class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="indicDebFin" style="width : 98%;">';
-		tr += '<option value=\'0\'> {{non}} </option>';
-		tr += '<option value=\'1\'> {{oui}} </option>';
-	tr += '</select></td>';
-	tr += '<td><span><input type="checkbox" class="cmdAttr" data-l1key="isVisible" checked/> {{Afficher}}</span></td>';
-    tr += '<td style="width : 100px;">';
+    tr += '<td style="font-size:90%;">';
+		tr += '{{Nom}} : <br/><input class="cmdAttr form-control input-sm" style="width:50%; margin-bottom:3px;" data-l1key="name">';
+		tr += '{{URL de l\'agenda}} : <br/><input class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="calendarUrl" style="width:98%;">';
+	tr += '</td>';
+	tr += '<td style="font-size:90%;">';
+		tr += '{{Valeur par défaut}} : <br/><input class="cmdAttr form-control input-sm" style="width:95%; margin-bottom:3px;" data-l1key="configuration" data-l2key="defaultValue">';
+		tr += '{{Format donnée}} : <br/><select class="cmdAttr form-control input-sm" style="width:95%; margin-bottom:3px;" data-l1key="configuration" data-l2key="viewStyle">';
+			tr += '<option value=\'current_titleOnly\'> {{event courant}} </option>';
+			tr += '<option value=\'current_withHour\'> {{event courant (avec heures)}} </option>';
+			tr += '<option value=\'1day_next1hour\'> {{event heure à venir}} </option>';
+			tr += '<option value=\'1day_today\'> {{event sur la journée}} </option>';
+		tr += '</select>';
+		tr += '<input type="checkbox" class="cmdAttr" data-l1key="configuration" data-l2key="indicDebFin" checked/> : {{Indicateurs début/fin}} <br/>';
+//		tr += '<input type="checkbox" class="cmdAttr" data-l1key="configuration" data-l2key="useOffset"/> : {{Activer l\'offset en cas de congé/absence}} <br/>';
+	tr += '</td>';
+	tr += '<td style="font-size:90%;">';
+		tr += '<input type="checkbox" class="cmdAttr" data-l1key="isVisible" checked/> : {{Afficher calendrier}} <br/>';
+		tr += '<input type="checkbox" class="cmdAttr" data-l1key="configuration" data-l2key="showHour" checked/> : {{Afficher heure}} <br/>';
+		tr += '<span style="padding-left:10px;" class="spanShowHour24"><input type="checkbox" class="cmdAttr" data-l1key="configuration" data-l2key="showHour24H" checked/> : {{Afficher heure event de 24h}}</span>';
+	tr += '</td>';
+    tr += '<td style="width:100px;">';
     tr += '<input class="cmdAttr form-control input-sm" data-l1key="type" value="info" style="display : none;">';
     tr += '<input class="cmdAttr form-control input-sm" data-l1key="subType" value="string" style="display : none;">';
     if (is_numeric(_cmd.id)) {
@@ -47,25 +54,36 @@ function addCmdToTable(_cmd) {
     $('#table_cmd tbody').append(tr);
     $('#table_cmd tbody tr:last').setValues(_cmd, '.cmdAttr');
 }
-/*
-function gCalendar_selectOpt_viewType() {
-	var myOpt = [['current_titleOnly','{{event courant}}'],
-				['current_withHour','{{event courant (avec heures)}}'],
-				['1day_next1hour','{{event heure à venir}}'],
-				['1day_today','{{event sur la journée}}']];
-	var viewOpt = '';
-	for(var i=0;i<myOpt.length;i++) {
-		viewOpt += '<option value=\''+ myOpt[i][0] +'\'>'+ myOpt[i][1] +'</option>';
-	}
-	return viewOpt;
-}
 
-function gCalendar_selectOpt_indic() {
-	var myOpt = [[0,'{{non}}'],[1,'{{oui}}']];
-	var viewOpt = '';
-	for(var i=0;i<myOpt.length;i++) {
-		viewOpt += '<option value=\''+ myOpt[i][0] +'\'>'+ myOpt[i][1] +'</option>';
+// pour l'aide à l'écriture d'un événement dans l'agenda google //
+$('#bt_helpForWriteGCalEvent').on('click', function (event) {
+	$('#md_modal').dialog({title: "{{Assistance à la création d'un événement \"scénario\" dans un Agenda Google}}"});
+	$('#md_modal').load('index.php?v=d&plugin=gCalendar&modal=help-scenario&id=' + $('.eqLogicAttr[data-l1key=id]').value(), function () {
+		$('#bt_genEventFormat').on('click', function (event) {
+			sEventFormat = "sc=" + $('#gCalendar_idScenario').value();
+			if (($('#gCalendar_variable').value()!='') && (($('#gCalendar_valFirst').value()!='') || ($('#gCalendar_valLast').value()!=''))) {
+				sEventFormat += ";" + $('#gCalendar_texte').value().replace(";", ",");
+				sEventFormat += ";" + $('#gCalendar_variable').value().replace(";", ",");
+				sEventFormat += ";" + $('#gCalendar_valFirst').value().replace(";", ",");
+				sEventFormat += ";" + $('#gCalendar_valLast').value().replace(";", ",");
+			} else if ($('#gCalendar_texte').value()!='') {
+				sEventFormat += ";" + $('#gCalendar_texte').value().replace(";", ",");
+			}
+			$('#gCalendar_EventFormat').value(sEventFormat);
+		});
+		$('.btn-danger[data-dismiss=modal]').on('click', function () {
+			$('#md_modal').dialog('close');
+		});
+	}).dialog('open');
+});
+
+$('body').delegate('.cmd .cmdAttr[data-l1key=configuration][data-l2key=showHour]', 'change', function () {
+	if ($(this).value()==1) {
+		$(this).closest('.cmd').find('.spanShowHour24').show();
+	} else {
+		$(this).closest('.cmd').find('.spanShowHour24').hide();
 	}
-	return viewOpt;
-}
-*/
+});
+
+
+//$('.eqLogicAttr[data-l2key=showHour]').on('change', function (event) { alert(''); });

@@ -1,45 +1,46 @@
 [panel,primary]
 .Peut on avoir les futurs evenements
 --
-Dans le Widget oui en mode "journée". Par contre, le traitement de futurs évènements n'est pas possible (ils ne sont présents qu'en terme d'affichage).
---
-
-[panel,primary]
-.Mes scénarios réagissent à des évènements passées ou futurs (mode prochaine heure ou journée)
---
-Dans l'analyse de la trame, il faut vérifier que vous êtes sur un évènement actif; en vérifiant que [A] est présent.(exemple : '...'~'[A] mon event')
+Avec les valeurs "event heure à venir" et "event sur la journée" du paramètre "format donnée" : oui d'un point de vue affichage sur le widget. +
+Par contre, le traitement de futurs évènements n'est pas possible (ils ne sont présents qu'en terme d'affichage), sauf si vous parcer les informations. 
 --
 
 [panel,primary]
 .J'ai modifié mon agenda google et l'évènement n'apparait pas
 --
-Le cache est raffraichit toutes les 15minutes, toutes modifications n'apparaitra dans votre agenda qu'aux heure/minute suivantes : 00,15,30,45.
+Le raffraichissement du cache est réalisé en fonction du paramétrage que vous avez configuré (minimum 15mins). +
+Toutes modifications sur l'agent Google n'apparaitront sur le plugin gCalendar qu'aux heures fixes liées à la configuration définies (cf. doc).
 --
 
 [panel,primary]
 .Quelle période de l'agenda est affichée dans le widget
 --
-La récupération des données et l'affichage dans le widget ne traitent que des données de la journée courante. 
-Si l'évènement fait plus d'une journée, les heures de début et de fin sont présentées uniquement pour la journée en cours.
-(exemple si l'évènement est configurée sur jour1 10h - jour2 10h; le jour 1, il sera affiché: 10h-23h59 et jour2: 0h-10h).
+La récupération des données et l'affichage dans le widget ne traitent que des données de la journée courante. +
+Si l'évènement fait plus d'une journée, les heures de début et de fin sont présentées uniquement pour la journée en cours. +
+_(exemple si l'évènement est configurée sur jour1 10h - jour2 10h; le jour 1, il sera affiché: 10h-23h59 et jour2: 0h-10h)_ +
 Même pour une configuration en "heure suivante", les informations affichées seront uniquement jusqu'à 23h59.
 --
 
 [panel,primary]
 .Les bornes sont-elles incluses 
 --
-L'heure de début est incluse; la 1ère minute est "active" et remonte l'information [D][A].
-
- - exemple: 10h-18h: 10h00 contient [D][A]
-
-L'heure de fin n'est pas incluse dans la période d'activité, c'est la dernière minute précédente qui présente l'information [F][A] sauf pour 23h59.
-
- - exemple1: 10h-18h: 17h59 contient [F][A] à 18h00 l'évènement est terminée et non actif, [A] n'est plus présent. 
- - exemple2: 19h-0h: l'heure de fin est converti en 23h59 et contient [F][A] à 0h l'évènement est terminée et non actif, [A] n'est plus présent.
+L'heure de début est incluse : la 1ère minute est "active" et remonte l'information [yellow-background]#;DA;# (exemple: 10h-18h: 10h00 contient [yellow-background]#;DA;#) +
+L'heure de fin n'est pas incluse dans la période d'activité, c'est la dernière minute précédente qui présente l'information [yellow-background]#;FA;# ; sauf pour 23h59. +
+_(exemple1: 10h-18h: 17h59 contient [yellow-background]#;FA;#, à 18h00 l'évènement est terminée et non actif, [yellow-background]#;A;# n'est plus présent)_. +
+_(exemple2: 19h-0h: l'heure de fin est converti en 23h59 et contient [yellow-background]#;FA;#, à 0h l'évènement est terminée et non actif, [yellow-background]#;A;# n'est plus présent)._
 --
 
 [panel,primary]
 .Sur la version mobile je ne vois pas les évènements passés en affichage journée
 --
 Sur la version mobile, seuls les évènements en cours et à venir sont affichés. Même en mode journée, les évènements passés ne sont plus affiché (contrairement à l'affichage dashboard).
+--
+
+
+[panel,primary]
+.Existe-il un agenda des jours fériés ? 
+--
+Oui il existe un agenda google qui liste les jours fériés (en France), l'url est la suivante : +
+https://www.google.com/calendar/feeds/fr.french%23holiday%40group.v.calendar.google.com/public/basic. +
+*Remarque :* par contre, ce calendrier présent aussi des événements (comme la fête des mères) qui ne sont pas des jours fériés ... :(
 --

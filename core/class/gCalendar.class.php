@@ -24,10 +24,6 @@ if (!defined('GCALENDAR_CACHE_PATH')) {
 	define('GCALENDAR_CACHE_PATH', '/tmp/gCalendar/');
 }
 
-// Définie les minutes de rafraichissement du fichier cache (mettre le 1er temps toujours en 1ère position et donc le 00 à la fin) //
-if (!defined('GCALENDAR_REFRESH_TIME')) {
-	define('GCALENDAR_REFRESH_TIME', '15;30;45;00');
-}
 // Définie le texte par défaut à afficher (cas d'erreur) //
 if (!defined('GCALENDAR_TXT_DV')) {
 	define('GCALENDAR_TXT_DV', __('Aucun', __FILE__));
@@ -50,27 +46,32 @@ class gCalendar extends eqLogic {
 	 * @return void
 	 */
 	public static function cron() {
-		log::add('gCalendar', 'debug', '[START PULL]===== pull().nb gCal=' . count(self::byType('gCalendar')));
+		$_sTs=mktime();
+		log::add('gCalendar', 'debug', '[START CRON]===== cron().nb gCal=' . count(self::byType('gCalendar')));
 		foreach (self::byType('gCalendar') as $gCalendar) {
 			$_bDoRefresh = FALSE; // mettre TRUE pour forcer la remise du cache du widget //
-			log::add('gCalendar', 'debug', '[' . $gCalendar->getId() . '] pull().isEnable=' . $gCalendar->getIsEnable() . ' - isVisible=' . $gCalendar->getIsVisible());
+			log::add('gCalendar', 'debug', '[' . $gCalendar->getId() . '] cron().isEnable=' . $gCalendar->getIsEnable() . ' - isVisible=' . $gCalendar->getIsVisible());
 			// Action si widget actif //
 			if ($gCalendar->getIsEnable()) {
-				log::add('gCalendar', 'debug', '[' . $gCalendar->getId() . '] pull().nb cmd=' . count($gCalendar->getCmd('info')));
+				log::add('gCalendar', 'debug', '[' . $gCalendar->getId() . '] cron().nb cmd=' . count($gCalendar->getCmd('info')));
 				foreach ($gCalendar->getCmd('info') as $cmd) {
-					$value = $cmd->execute();
-					//log::add('gCalendar','debug','['.$gCalendar->getId().'] pull().value='.$value);
-					//log::add('gCalendar','debug','['.$gCalendar->getId().'] pull().execCmd()='.$cmd->execCmd());
+					// récupère la période de rafraichissement, avant de lancer la tache //
+					$_sRefreshPeriod = $gCalendar->getConfiguration('refreshPeriod');
+					$value = trim($cmd->execute(array('refreshCache' => $gCalendar->isTimeToRefreshCache($_sRefreshPeriod))));
+					//log::add('gCalendar','debug','['.$gCalendar->getId().'] cron().value='.$value);
+					//log::add('gCalendar','debug','['.$gCalendar->getId().'] cron().execCmd()='.$cmd->execCmd());
+					//log::add('gCalendar','debug','['.$gCalendar->getId().'] cron().cmd='.print_r($cmd,true));
 					if ($value != $cmd->execCmd()) {
-						log::add('gCalendar', 'info', '[' . $gCalendar->getId() . '|' . $cmd->getId() . '] pull() Refresh Data : do event()');
+						log::add('gCalendar', 'info', '[' . $gCalendar->getId() . '|' . $cmd->getId() . '] cron() Refreshed Data : do event()');
 						$cmd->setCollectDate(''); //date('Y-m-d H:i:s')
 						$cmd->event($value);
 						$_bDoRefresh = true;
 					}
 				}
+				// mise à jour du widget //
 				if ($gCalendar->getConfiguration('widgetOther') != '1'){
 					if (($gCalendar->getIsVisible()) && (($_bDoRefresh) || (date('H:i') === '00:00'))) {
-						log::add('gCalendar', 'debug', '[' . $gCalendar->getId() . '] pull() remove cache and refreshWidget ...');
+						log::add('gCalendar', 'debug', '[' . $gCalendar->getId() . '] cron() remove cache and refreshWidget ...');
 						$mc = cache::byKey('gcalendarWidgetmobile' . $gCalendar->getId());
 						$mc->remove();
 						$mc = cache::byKey('gcalendarWidgetdashboard' . $gCalendar->getId());
@@ -81,9 +82,90 @@ class gCalendar extends eqLogic {
 						$gCalendar->refreshWidget();
 					}
 				}
+				// lancement des scénarios //
+				if (($gCalendar->getConfiguration('acceptLaunchSc') == '1') && ($_bDoRefresh)) {
+					foreach ($gCalendar->getCmd('info') as $cmd) {
+						$_sEvents = $cmd->execCmd();
+						if (($cmd->getConfiguration('viewStyle') != 'current_titleOnly') && (strpos($_sEvents,';S;')>0)) {
+							$_aEvents = explode('||', $_sEvents);
+							for ($i = 0; $i < count($_aEvents); $i++) {
+								$_aOneEvent = explode(';',$_aEvents[$i]);
+								if ((($_aOneEvent[2]=='DA') || ($_aOneEvent[2]=='FA')) && ($_aOneEvent[4] == 'S')) {
+									$gCalendar->launchScenarioFromEvent($_aOneEvent);
+								} 
+							}
+						}
+					}
+				}
 			}
 		}
-		log::add('gCalendar', 'debug', '[END PULL]=====');
+		log::add('gCalendar', 'debug', '[END CRON]=====('.intval(mktime()-$_sTs).')');
+	}
+
+	/**
+	 * Permet de lancer un scénario par son id, avec passage de paramètre
+	 * @param array $_aEvent informations sur l'évènement 
+	 * @return void
+	 */
+	public function launchScenarioFromEvent($_aEvent = null) {
+		if ($_aEvent[3] >= 1) {
+			$_oSc = scenario::byId($_aEvent[3]);
+			if ($_oSc !== false) {
+				$_bLaunchOK = false;
+				// définition des options //
+				if (($_aEvent[6]!='') && ($_aEvent[7]!='') && ($_aEvent[2]=='DA')) {
+					$_oSc->setData($_aEvent[6],$_aEvent[7]);
+					$_bLaunchOK = true; 
+				} elseif (($_aEvent[6]!='') && ($_aEvent[8]!='') && ($_aEvent[2]=='FA')) {
+					$_oSc->setData($_aEvent[6],$_aEvent[8]);
+					$_bLaunchOK = true;
+				} else {
+					if ($_aEvent[2]=='DA') {
+						$_bLaunchOK = true; 
+					}
+				}
+				if ($_bLaunchOK) {
+					if ($_oSc->launch()) {
+						log::add('gCalendar', 'info', '[' . $this->getId() . '] launchScenarioFromEvent('.$_aEvent[2].','.$_oSc->getId().'): '.__('lancement du scénario', __FILE__).': '.$_oSc->getName().', params='.$_aEvent[5].';'.$_aEvent[6].';'.$_aEvent[7].';'.$_aEvent[8]);
+					} else {
+						log::add('gCalendar', 'info', '[' . $this->getId() . '] launchScenarioFromEvent('.$_aEvent[2].','.$_oSc->getId().'): '.__('ERREUR lors du lancement du scénario', __FILE__).': '.$_oSc->getName());
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Vérifie si c'est l'heure de raffraichissement des données en cache en fonction du paramètre configuré par l'utilisateur //
+	 * @param 
+	 * @return bool
+	 */
+	public function isTimeToRefreshCache($_sRefreshPeriod) {
+		switch($_sRefreshPeriod) {
+			case '30': // 30mins
+				$_aPeriod=array('30','00');
+				return in_array(date('i'), $_aPeriod); break;
+			case '60': // 60mins
+				$_aPeriod=array('00');
+				return in_array(date('i'), $_aPeriod); break;
+			case '180': // 3h
+				$_aPeriod=array('0000','0300','0600','0900','1200','1500','1800','2100');
+				return in_array(date('Hi'), $_aPeriod); break;
+			case '360': // 6h
+				$_aPeriod=array('0000','0600','1200','1800');
+				return in_array(date('Hi'), $_aPeriod); break;
+			case '720': // 12h
+				$_aPeriod=array('0000','1200');
+				return in_array(date('Hi'), $_aPeriod); break;
+			case '1440': // 24h
+				$_aPeriod=array('0000');
+				return in_array(date('Hi'), $_aPeriod); break;
+			case '15': // 15mins (defaut)
+			default; 
+				$_aPeriod=array('15','30','45','00');
+				return in_array(date('i'), $_aPeriod);
+		}
+		return false;
 	}
 
 	/**
@@ -94,7 +176,6 @@ class gCalendar extends eqLogic {
 		$month = array(__('Janv', __FILE__), __('Fév', __FILE__), __('Mars', __FILE__), __('Avril', __FILE__), __('Mai', __FILE__), 
 						__('Juin', __FILE__), __('Juil', __FILE__), __('Août', __FILE__), __('Sept', __FILE__), __('Oct', __FILE__), 
 						__('Nov', __FILE__), __('Déc', __FILE__));
-		// date('j M Y (\SW)')
 		return date('j').' '.$month[(date('m')-1)].' '.date('Y').' ('.__('S', __FILE__).date('W').')';
 	}
 	
@@ -116,21 +197,23 @@ class gCalendar extends eqLogic {
 			log::add('gCalendar', 'debug', '[' . $this->getId() . '] toHtml(' . $_version . ') aborded !');
 			return $mc->getValue();
 		}
+		$_sToday = ($this->getConfiguration('hideDateDashboard')==1)?'':__("aujourd'hui", __FILE__)." : ".$this->getToday();
 		$replace = array(
 			'#id#' => $this->getId(),
 			'#name#' => ($this->getIsEnable()) ? $this->getName() : '<del>' . $this->getName() . '</del>',
 			'#background_color#' => $this->getBackgroundColor($_version),
-			'#eqLink#' => $this->getLinkToConfiguration(),
-			'#refreshDate#' => (!empty($this->_sRefreshDate)) ? $this->_sRefreshDate : date('Y-m-d H:i:s'),
-			'#today#' => ($_version == 'mobile') ? date('d') : $this->getToday(),
-			'#txtToday#' => __("aujourd'hui", __FILE__),
-			'#txtView#' => __("affichage", __FILE__),
-			'#txtGotoAG#' => __("voir Agenda Google", __FILE__),
-			'#txtDay#' => __("journée", __FILE__),
-			'#txtNextHour#' => __("prochaine heure", __FILE__),
-			'#txtNow#' => __("instantané", __FILE__),
+			'#today#' => ($_version == 'mobile') ? date('d') : $_sToday ,
 			'#gCalArray#' => '0',
 			);
+		if ($_version != 'mobile') { 
+			$replace['#eqLink#'] = $this->getLinkToConfiguration();
+			$replace['#refreshDate#'] = (!empty($this->_sRefreshDate)) ? $this->_sRefreshDate : date('Y-m-d H:i:s');
+			$replace['#txtView#'] = __("affichage", __FILE__);
+			$replace['#txtGotoAG#'] = __("voir Agenda Google", __FILE__);
+			$replace['#txtDay#'] = __("journée", __FILE__);
+			$replace['#txtNextHour#'] = __("prochaine heure", __FILE__);
+			$replace['#txtNow#'] = __("instantané", __FILE__);
+		}
 		// action sur l'affichage du nom //
 		if (($_version == 'dview' || $_version == 'mview') && $this->getDisplay('doNotShowNameOnView') == 1) {
 			$replace['#name#'] = '';
@@ -142,36 +225,84 @@ class gCalendar extends eqLogic {
 			$replace['#name#'] = '';
 		}
 		// pour chaque calendrier du widget //
-		// 0:nom jeedom / 1:type de vue / 2:date de mise à jour / 3:valeur affichée / 4:titre google / 5:url / 6:nb évènement //
+		// tableau JS >> 0:nom jeedom / 1:type de vue / 2:date de mise à jour / 3:valeur affichée / 4:titre google / 5:url / 6:nb évènement //
 		$nbCalRefresh = 0;
 		foreach ($this->getCmd('info') as $cmdGCal) {
 			if ($cmdGCal->getIsVisible()) {
 				if (($_sEvents = $cmdGCal->execCmd()) != '') {
+					// génère le format en fonction de la vue //
 					if ($cmdGCal->getConfiguration('viewStyle') != 'current_titleOnly') {
 						$_aEvents = explode('||', $_sEvents);
 						$nbEvent = ($cmdGCal->getConfiguration('defaultValue', GCALENDAR_TXT_DV) != $_sEvents) ? count($_aEvents) : 0;
 						if ($nbEvent > 0) {
+							// pour chaque événement //
 							for ($i = 0; $i < count($_aEvents); $i++) {
-								if ($_version == 'mobile') {
-									if (date('Hi') < str_replace(":", "", substr($_aEvents[$i], 7, 5))) {
-										$_aEvents[$i] = "<div class='gCalendar_itemActif'>" . $_aEvents[$i] . "</div>";
+								$_aOneEvent = explode(';',$_aEvents[$i]);
+								// définit les valeurs à afficher : heure //
+								$_sEventHours = "<span class='gCalendar_hour'>(".$_aOneEvent[0]."-".$_aOneEvent[1].")</span>";
+								if ($cmdGCal->getConfiguration('showHour')==0) {
+									$_sEventHours = "";
+								} else {
+									if (($cmdGCal->getConfiguration('showHour24H')==0) && ($_aOneEvent[0]=="00:00") && ($_aOneEvent[1]=="23:59")) {
+										$_sEventHours = "";
+									}
+								}
+								// état //
+								if ($_aOneEvent[2] == 'DA') {
+									$_sEventState = " <i class='fa fa-plus-circle' title='".__('évènement actif: 1ère minute', __FILE__)."' style='color:#FF0000;'></i>";
+								} elseif ($_aOneEvent[2] == 'FA') {
+									$_sEventState = " <i class='fa fa-ban' title='".__('évènement actif: dernière minute', __FILE__)."' style='color:#FF0000;'></i>";
+								} elseif ($_aOneEvent[2] == 'A') {
+									$_sEventState = " <i class='fa fa-check-circle-o' title='".__('évènement actif', __FILE__)."' style='color:#0000FF;'></i>";
+								} else {
+									$_sEventState = "";
+								}
+								// titre //
+								$_sEventTxt = $_aOneEvent[3];
+								// gestion des scénarios //
+								if ($this->getConfiguration('acceptLaunchSc') == '1') {
+									if (($_aOneEvent[4] == 'S') && ($_aOneEvent[3] >= 1)) {
+										$_oSc = scenario::byId($_aOneEvent[3]);
+										//log::add('gCalendar', 'debug', '[' . $this->getId() . '] toHtml() object scenario='.print_r($_oSc,true));
+										if ($_oSc !== false) {
+											$_aOneEvent[5] = ($_aOneEvent[5]!='')?' ('.$_aOneEvent[5].')':'';
+											$_aOneEvent[7] = ($_aOneEvent[7]!='')?__('1er min', __FILE__).'='.$_aOneEvent[7].' | ':'';
+											$_aOneEvent[8] = ($_aOneEvent[8]!='')?__('dern. min', __FILE__).'='.$_aOneEvent[8]:'';
+											if ($_version == 'mobile') { 
+												$_sIcon = "<i class='fa fa-cogs'></i> ";
+											} else {
+												$_sIcon = "<a href='index.php?v=d&p=scenario&id=".$_aOneEvent[3]."'><i class='fa fa-cogs' title='".__('éditer le scénario', __FILE__)."'></i></a> ";
+											}
+											$_sEventTxt = $_sIcon.'<span title="'.$_aOneEvent[7].$_aOneEvent[8].'">'.$_oSc->getName().'</span>'.$_aOneEvent[5];
+										} else {
+											log::add('gCalendar', 'error', '[' . $this->getId() . '|'.$cmdGCal->getId() .'] toHtml().sc='.$_aOneEvent[3].' '.__("l'id du scénario n'existe pas, merci de vérifier.", __FILE__));
+										}
 									} else {
-										$_aEvents[$i] = '';
-										$nbEvent--;
+										$_sEventTxt = str_replace('{ERR}',"<span title='".__('Erreur dans le format de la trame', __FILE__)."'>{ERR}</span>",$_aOneEvent[3]);
 									}
 								} else {
-									$_sBorder = 'border-bottom:1px solid #DDDDDD;';
-									if (date('Hi') >= str_replace(":", "", substr($_aEvents[$i], 7, 5))) {
-										$_aEvents[$i] = "<div class='gCalendar_itemInactif' style='font-style:italic;color:#BBBBBB;" . $_sBorder . "'>" . $_aEvents[$i] . "</div>";
+									// titre //
+									if ($_aOneEvent[4]=='S') {
+										$_sEventTxt = 'sc='.$_aOneEvent[3].';'.$_aOneEvent[5].';'.$_aOneEvent[6].';'.$_aOneEvent[7].';'.$_aOneEvent[8];
+									}
+								}
+								if ($_version == 'mobile') {
+									if ($_aOneEvent[2]=='P') {
+										$_aEvents[$i] = '';
+										$nbEvent--;
 									} else {
-										$_aEvents[$i] = "<div class='gCalendar_itemActif' style='" . $_sBorder . "'>" . $_aEvents[$i] . "</div>";
+										$_aEvents[$i] = "<div class='gCalendar_itemActif'>" . $_sEventHours . $_sEventState . " ". $_sEventTxt ."</div>";
+									}
+								} else {
+									if ($i < (count($_aEvents)-1)) $_sBorder = 'border-bottom:1px solid #DDDDDD;'; else $_sBorder = '';
+									if ($_aOneEvent[2]=='P') {
+										$_aEvents[$i] = "<div class='gCalendar_itemInactif' style='font-style:italic;color:#BBBBBB;" . $_sBorder . "'>" . $_sEventHours . $_sEventState . " ".$_sEventTxt ."</div>";
+									} else {
+										$_aEvents[$i] = "<div class='gCalendar_itemActif' style='" . $_sBorder . "'>" . $_sEventHours . $_sEventState . " ".$_sEventTxt ."</div>";
 									}
 								}
 							}
 							$_sEvents = implode('', $_aEvents);
-							$_sEvents = str_replace(" [D][A] ", " <i class='fa fa-plus-circle' title='".__('évènement actif: 1ère minute', __FILE__)."' style='color:#FF0000;'></i> ", $_sEvents);
-							$_sEvents = str_replace(" [F][A] ", " <i class='fa fa-ban' title='".__('évènement actif: dernière minute', __FILE__)."' style='color:#FF0000;'></i> ", $_sEvents);
-							$_sEvents = str_replace(" [A] ", " <i class='fa fa-check-circle-o' title='".__('évènement actif', __FILE__)."' style='color:#0000FF;'></i> ", $_sEvents);
 						} else {
 							if ($_version == 'mobile') {
 								$_sEvents = "<div class='gCalendar_itemInactif'>" . $_sEvents . "</div>";
@@ -180,12 +311,11 @@ class gCalendar extends eqLogic {
 							}
 						}
 					} else {
-						$_aEvents = explode(' - ', $_sEvents);
-						$nbEvent = ($cmdGCal->getConfiguration('defaultValue', GCALENDAR_TXT_DV) != $_sEvents) ? count($_aEvents) : 0;
+						$nbEvent = ($cmdGCal->getConfiguration('defaultValue', GCALENDAR_TXT_DV) != $_sEvents) ? count(explode(' - ', $_sEvents)) : 0;
 						if ($_version == 'mobile') {
-							$_sEvents = "<div class='gCalendar_itemInactif'>" . $_sEvents . "</div>";
+							$_sEvents = "<div class='gCalendar_itemActif'>" . $_sEvents . "</div>";
 						} else {
-							$_sEvents = "<div class='gCalendar_itemInactif'>" . $_sEvents . "</div>";
+							$_sEvents = "<div class='gCalendar_itemActif'>" . $_sEvents . "</div>";
 						}
 					}
 					$_sEvents = str_replace('"', '\"', $_sEvents);
@@ -269,7 +399,11 @@ class gCalendarCmd extends cmd {
 
 		try {
 			// vérifie si le fichier local existe ou si heure/minute de rafraichissement du cache //
-			if ((!file_exists($fileCache)) || (in_array(date('i'), explode(';', GCALENDAR_REFRESH_TIME)) == true)) {
+			$_sRefreshCache = false; 
+			if (isset($_options['refreshCache'])) {
+				$_sRefreshCache = $_options['refreshCache'];
+			}
+			if ((!file_exists($fileCache)) || ($_sRefreshCache === true)) {
 				log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '] execute() Start work for cache file ...');
 				// définie la période à récupérer //
 			$ts_s = mktime(0, 0, 0, date('m'), date('d'), date('Y'));
@@ -310,27 +444,24 @@ class gCalendarCmd extends cmd {
 			log::add('gCalendar', 'debug', '[' . $this->eqLogic_id . '|' . $this->id . '|' . $oEvent->getTitle() . '] execute().sEventStartDate=' . $sEventStartDate . ', sEventEndDate=' . $sEventEndDate);
 			if ((!empty($sEventStartDate)) && (!empty($sEventEndDate))) {
 				if (strtotime($sEventStartDate) <= strtotime($sEventEndDate)) {
-					$_aFormatedEvent = $this->formatData($oEvent, $sEventStartDate, $sEventEndDate);
-					if (isset($_aFormatedEvent['t'])) {
-						array_push($result, $_aFormatedEvent);
+					$_sFormatedEvent = $this->formatData($oEvent, $sEventStartDate, $sEventEndDate, $this->getConfiguration('viewStyle'));
+					if ($_sFormatedEvent!='') {
+						array_push($result, $_sFormatedEvent);
 					}
 				} else {
 					log::add('gCalendar', 'info', '[' . $this->eqLogic_id . '|' . $this->id . '|' . $oEvent->getTitle() . '] execute(): '.__("la date de début est supérieure à la date de fin", __FILE__).' (' . $sEventStartDate . '>' . $sEventEndDate . ') >> '.__("vérifier votre RDV dans l'agent Google", __FILE__));
 				}
 			}
 		}
+		$view = '';
 		if (count($result) == 0) {
 			return __(str_replace("'", "\'", $this->getConfiguration('defaultValue', GCALENDAR_TXT_DV)), __FILE__);
 		} else {
-			$view = '';
-				// Formate les évènements dans une variable affichable //
-			for ($i = 0; $i < count($result); $i++) {
-				if (isset($result[$i]['t'])) {
-					$view .= ($i != 0) ? $result[$i]['s'] : '';
-					$view .= (!empty($result[$i]['h'])) ? '(' . $result[$i]['h'] . ') ' : '';
-					$view .= (!empty($result[$i]['a'])) ? $result[$i]['a'] : '';
-					$view .= $result[$i]['t'];
-				}
+			// Formate les évènements dans une variable affichable //
+			if ($this->getConfiguration('viewStyle') == 'current_titleOnly') {
+				$view = implode(' - ',$result);
+			} else {
+				$view = implode('||',$result);
 			}
 			return (!empty($view)) ? $view : $this->getConfiguration('defaultValue', GCALENDAR_TXT_DV);
 		}
@@ -351,27 +482,31 @@ class gCalendarCmd extends cmd {
 	 * @param object $oEvent objet évènement de google agenda
 	 * @param string $sEventStartDate date/heure de début de l'évènement (reformatée)
 	 * @param string $sEventEndDate date/heure de fin de l'évènement (reformatée)
-	 * @return array tableau de résultat, event par event
-	 *			t=titre / h=heure au format hh:mm-hh:mm / a=actif ou non (utile pour affichage période) / s=séparateur
-	 *				actif = [A] pour dire que l'évènement est en cours
-	 *						[D][A] premier minute de l'évènement (et dernière si l'évènement dure 1minute)
-	 *						[F][A] dernière minute de l'évènement
+	 * @param string $sViewStyle valeur du paramètre type d'affichage
+	 * @return string événement sous le format suivant :
+	 *		tableau >> heure_debut;heure_fin;statut;titre/id_scenario;type(S/vide);info_scenario;variable_scenario;val_debut_scenario;val_fin_scenario
+	 *				statut = A : pour dire que l'évènement est en cours
+	 *						DA : premier minute de l'évènement (et dernière si l'évènement dure 1minute)
+	 *						FA : dernière minute de l'évènement
 	 */
-	public function formatData($oEvent, $sEventStartDate, $sEventEndDate) {
+	public function formatData($oEvent, $sEventStartDate, $sEventEndDate, $sViewStyle='') {
 		$tsNow = mktime();
 		$tsTodayStart = mktime(0, 0, 0, date('m', $tsNow), date('d', $tsNow), date('Y', $tsNow));
 		$tsTodayEnd = mktime(23, 59, 59, date('m', $tsNow), date('d', $tsNow), date('Y', $tsNow));
-		$array = array();
 		// redéfinie les heures de début et de fin en fonction de la journée courante (utile pour les évènements sur plusieurs jours) //
 		$sNewStart = (strtotime($sEventStartDate) <= $tsTodayStart) ? $tsTodayStart : strtotime($sEventStartDate);
 		$sNewEnd = (strtotime($sEventEndDate) >= $tsTodayEnd) ? $tsTodayEnd : strtotime($sEventEndDate);
 		$title = (string) $oEvent->getTitle();
-		switch ($this->getConfiguration('viewStyle')) {
+		$result = '';
+		switch ($sViewStyle) {
 			case "1day_today":
 				if ((($sNewStart <= $tsTodayStart) || ($sNewStart <= $tsTodayEnd))
 					&& (($tsTodayStart <= $sNewEnd) || ($tsTodayEnd <= $sNewEnd))) {
 					log::add('gCalendar', 'debug', '[' . $oEvent->getTitle() . '] execute() add Event - start:' . $sNewStart . ' - end:' . $sNewEnd);
-					$array = array('t' => $title, 'h' => date('H:i', $sNewStart) . '-' . date('H:i', $sNewEnd), 'a' => $this->setActif($sNewStart, $sNewEnd, strtotime($sEventStartDate), strtotime($sEventEndDate), $tsNow), 's' => '||');
+					$result .= date('H:i',$sNewStart) . ';';
+					$result .= date('H:i',$sNewEnd) . ';';
+					$result .= $this->setActif($sNewStart, $sNewEnd, strtotime($sEventStartDate), strtotime($sEventEndDate), $tsNow) . ';';
+					$result .= $this->setTitle($title);
 				}
 				break;
 			case "1day_next1hour":
@@ -379,36 +514,72 @@ class gCalendarCmd extends cmd {
 				if ((($sNewStart <= $tsNow) || ($sNewStart <= $timeend))
 					&& (($tsNow <= $sNewEnd) || ($timeend <= $sNewEnd))) {
 					log::add('gCalendar', 'debug', '[' . $oEvent->getTitle() . '] execute() add Event - start:' . $sNewStart . ' - end:' . $sNewEnd);
-					$array = array('t' => $title, 'h' => date('H:i', $sNewStart) . '-' . date('H:i', $sNewEnd), 'a' => $this->setActif($sNewStart, $sNewEnd, strtotime($sEventStartDate), strtotime($sEventEndDate), $tsNow), 's' => '||');
+					$result .= date('H:i',$sNewStart) . ';';
+					$result .= date('H:i',$sNewEnd) . ';';
+					$result .= $this->setActif($sNewStart, $sNewEnd, strtotime($sEventStartDate), strtotime($sEventEndDate), $tsNow) . ';';
+					$result .= $this->setTitle($title);
 				}
 				break;
 			case "current_withHour":
 				if (($sNewStart <= $tsNow) && ($tsNow <= $sNewEnd)) {
 					log::add('gCalendar', 'debug', '[' . $oEvent->getTitle() . '] execute() add Event - start:' . $sNewStart . ' - end:' . $sNewEnd);
-					$array = array('t' => $title, 'h' => date('H:i', $sNewStart) . '-' . date('H:i', $sNewEnd), 'a' => $this->setActif($sNewStart, $sNewEnd, strtotime($sEventStartDate), strtotime($sEventEndDate), $tsNow), 's' => '||');
+					$result .= date('H:i',$sNewStart) . ';';
+					$result .= date('H:i',$sNewEnd) . ';';
+					$result .= $this->setActif($sNewStart, $sNewEnd, strtotime($sEventStartDate), strtotime($sEventEndDate), $tsNow) . ';';
+					$result .= $this->setTitle($title);
 				}
 				break;
 			case "current_titleOnly":
 				default:
 				if (($sNewStart <= $tsNow) && ($tsNow <= $sNewEnd)) {
 					log::add('gCalendar', 'debug', '[' . $oEvent->getTitle() . '] execute() add Event - start:' . $sNewStart . ' - end:' . $sNewEnd);
-					$array = array('t' => $title, 'h' => '', 'a' => '', 's' => ' - ');
+					$result = $title;
 				}
 		}
-		return $array;
+		return $result;
 	}
 
+	/**
+	 * Définie la valeur du champs "titre"
+	 *	Les valeurs contenues sont : titre ou n° du scénario / S si scénario / texte d'info / variable / valeur début / valeur fin
+	 *	exemple : sc=26;RDC;_sVoletAct;RDC-ON;RDC-OFF
+	 * @return string
+	 */
+	public function setTitle($_sTitle) {
+		if (substr(strtolower($_sTitle),0,3) === 'sc=') {
+			$_aTitle = explode(';',$_sTitle);
+			$_aNewTitle[0] = str_replace('sc=','', $_aTitle[0]);
+			if (is_numeric($_aNewTitle[0])) {
+				$_aNewTitle[1] = 'S';
+				$_aNewTitle[2] = (isset($_aTitle[1]))?$_aTitle[1]:'';
+				$_aNewTitle[3] = (isset($_aTitle[2]))?$_aTitle[2]:'';
+				$_aNewTitle[4] = (isset($_aTitle[3]))?$_aTitle[3]:'';
+				$_aNewTitle[5] = (isset($_aTitle[4]))?$_aTitle[4]:'';
+				$_sResult = implode(';',$_aNewTitle);
+			} else {
+				$_sResult = str_replace(';',',','{ERR}'.$_sTitle).';;;;;';
+			}
+		} else {
+			$_sResult = str_replace(';',',',$_sTitle).';;;;;';
+		}
+		return $_sResult;
+	}
+	
 	/**
 	 * Définie la valeur de l'état "Actif"
 	 * @return string
 	 */
 	public function setActif($sNewStart, $sNewEnd, $sEventStartDate, $sEventEndDate, $tsNow) {
-		$_sActif = (($sNewStart <= $tsNow) && ($tsNow <= $sNewEnd)) ? '[A] ' : '';
+		$_sActif = (($sNewStart <= $tsNow) && ($tsNow <= $sNewEnd)) ? 'A' : '';
 		if ((!empty($_sActif)) && ($this->getConfiguration('indicDebFin') == 1)) {
-			if (date('YzHi', $sEventStartDate) == date('YzHi', $tsNow)) {$_sActif = '[D]' . $_sActif;} else {
-				if (date('H:i', $sEventEndDate) != '23:59') {$sEventEndDate = $sEventEndDate - 60;}
-				if ((date('YzHi', $sEventEndDate)) == date('YzHi', $tsNow)) {$_sActif = '[F]' . $_sActif;}
+			if (date('YzHi', $sEventStartDate) == date('YzHi', $tsNow)) {
+				$_sActif = 'D' . $_sActif;
+			} else {
+				if (date('H:i', $sEventEndDate) != '23:59') { $sEventEndDate = $sEventEndDate - 60; }
+				if ((date('YzHi', $sEventEndDate)) == date('YzHi', $tsNow)) { $_sActif = 'F' . $_sActif; }
 			}
+		} elseif ((date('YzHi', $sEventEndDate)) <= date('YzHi', $tsNow)) {
+			$_sActif = (date('H:i', $sEventEndDate) != '23:59')?'P':'';
 		}
 		return $_sActif;
 	}
