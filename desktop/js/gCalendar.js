@@ -34,13 +34,13 @@ function addCmdToTable(_cmd) {
 			tr += '<option value=\'1day_next1hour\'> {{event heure à venir}} </option>';
 			tr += '<option value=\'1day_today\'> {{event sur la journée}} </option>';
 		tr += '</select>';
-		tr += '<input type="checkbox" class="cmdAttr" data-l1key="configuration" data-l2key="indicDebFin" checked/> : {{Indicateurs début/fin}} <br/>';
+		tr += '<input type="checkbox" class="cmdAttr bootstrapSwitch" data-l1key="configuration" data-l2key="indicDebFin" data-label-text="{{Indicateurs début/fin}}" checked/> ';
 //		tr += '<input type="checkbox" class="cmdAttr" data-l1key="configuration" data-l2key="useOffset"/> : {{Activer l\'offset en cas de congé/absence}} <br/>';
 	tr += '</td>';
 	tr += '<td style="font-size:90%;">';
-		tr += '<input type="checkbox" class="cmdAttr" data-l1key="isVisible" checked/> : {{Afficher calendrier}} <br/>';
-		tr += '<input type="checkbox" class="cmdAttr" data-l1key="configuration" data-l2key="showHour" checked/> : {{Afficher heure}} <br/>';
-		tr += '<span style="padding-left:10px;" class="spanShowHour24"><input type="checkbox" class="cmdAttr" data-l1key="configuration" data-l2key="showHour24H" checked/> : {{Afficher heure event de 24h}}</span>';
+		tr += '<input type="checkbox" class="cmdAttr bootstrapSwitch" data-l1key="isVisible" data-label-text="{{Afficher calendrier}}" checked/> ';
+		tr += '<input type="checkbox" class="cmdAttr bootstrapSwitch" data-l1key="configuration" data-label-text="{{Afficher heure}}" data-l2key="showHour" checked/> ';
+		tr += '<span style="padding-left:10px;" class="spanShowHour24"><input type="checkbox" class="cmdAttr" data-label-text="{{Afficher heure event de 24h}}" data-l1key="configuration" data-l2key="showHour24H" checked/></span> ';
 	tr += '</td>';
     tr += '<td style="width:100px;">';
     tr += '<input class="cmdAttr form-control input-sm" data-l1key="type" value="info" style="display : none;">';
