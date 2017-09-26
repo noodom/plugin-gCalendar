@@ -1,5 +1,5 @@
-﻿Ce plugin permet de retourner les évènements de votre agenda Google, il suffit pour cela de créer un équipement et de lui ajouter autant de "commandes" que vous avez d'agenda à traiter. Même s’il y beaucoups de paramètres, la configuration du plugin est simple : les paramètres par défaut peuvent être conservés, ce qui facilite la création. +
-Vous pouvez l’utiliser pour l'affichage d'agenda tout simplement ou pour récupérer des agendas vous permettant de réaliser des actions dans votre installation Jeedom.
+﻿Ce plugin permet de retourner les évènements de votre agenda Google, il suffit pour cela de créer un équipement et de lui ajouter autant de "commandes" que vous avez d'agendas à traiter. Même s’il y beaucoups de paramètres, la configuration du plugin est simple : les paramètres par défaut peuvent être conservés, ce qui facilite la création. +
+Vous pouvez l’utiliser pour l'affichage d'agendas tout simplement ou pour récupérer des agendas vous permettant de réaliser des actions dans votre installation Jeedom.
 
 
 ''''
@@ -20,7 +20,7 @@ _(décoché par défaut)_ | Si coché, active le plugin. +
 *Remarque :* Si l'option est décochée, le plugin est désactivé et aucune requête ne sera demandée à Google ; le plugin est _"en attente"_.
 | Visible	| Checkbox +
 _(décoché par défaut)_ | Si l'option est cochée, affiche le plugin. +
-*Remarque :* Si l'option est décochée, le plugin fonctionne normalement ; les requêtes continues d'être envoyées vers Google.
+*Remarque :* Si l'option est décochée, le plugin fonctionne normalement ; les requêtes continuent d'être envoyées vers Google.
 | Autre Widget	| Checkbox + 
 _(décoché par défaut)_ | Cette option vous permet de désactiver le widget standard du plugin et donc de créer son propre widget. + 
 _(Il est conseillé de laisser cette option décochée, pour disposer de l'ensemble des fonctionnalités du plugin)._
@@ -59,7 +59,7 @@ _("event courant" par défaut)_ | Définit le "format" à afficher au niveau du 
 - `Event sur la journée` : affiche tous les évènements de la journée (passés, en cours, à venir) ;
 | Indicateurs début/fin | Checkbox + 
 _(coché par défaut)_ | Permet de définir si les indicateurs de début/de fin d'évènement sont utilisés ; +
-- Si coché : les indicateurs "Début" ([yellow-background]#;DA;#) et "Fin" ([yellow-background]#;FA;#) d'activité sont utilisés en complément de l'incidateur "Actif" +
+- Si coché : les indicateurs "Début" ([yellow-background]#;DA;#) et "Fin" ([yellow-background]#;FA;#) d'activité sont utilisés en complément de l'indicateur "Actif" +
 - Si décoché : seul l'indicateur d'état "Actif" est utilisé ([yellow-background]#;A;#)
 | Afficher calendrier | Checkbox + 
 _(coché par défaut)_ | Paramètre graphique ; permet de définir si le calendrier doit être affiché dans le widget. (est utilisé dans le cas où il y a plusieurs agendas configurés au sein d'un même équipement). + 
@@ -83,14 +83,14 @@ image::../images/gCalendar_widget1.PNG[]
 
 Au niveau d'un Calendrier :
 
-* Le nombre d'évènements est affiché à coté du titre du Calendrier ;
+* Le nombre d'évènements est affiché à côté du titre du Calendrier ;
 * L'icône "Onde" (à droite du titre), permet d'ouvrir l'agenda Google ; 
 * Les évènements passés sont grisés ; 
 * Les évènements en cours sont repérés par une icône "Actif" (mais aussi 1ère minute et dernière minute, si l'option est active) ; 
 * Les évènements à venir sont représentés sans indicateur ; 
 * Les évènements identifiés "Scénario" présentent (seulement si l'option "autoriser les scénarios" est activée : 
 ** Le nom du scénario, tel que défini dans Jeedom ; 
-** Le texte d'information, tel que défini dans la synthaxe de l'évènement (2nd champ); 
+** Le texte d'information, tel que défini dans la syntaxe de l'évènement (2nd champ); 
 ** Une icône "roues crantées" indique que l'évènement est un scénario ; 
 *** en cliquant dessus, il est possible d'ouvrir la page de paramétrage du scénario ; 
 ** En passant la souris sur le titre : montre les valeurs de la variable définie pour la 1ère et/ou dernière minute.
@@ -174,7 +174,7 @@ _Valeur non obligatoire. Exemple : OFF_
 
 *Opération à réaliser :* +
 
-* Une fois, les informations renseignées (minimum le scénario), cliquez sur le bouton "Générer". 
+* Une fois les informations renseignées (minimum le scénario), cliquez sur le bouton "Générer". 
 * La zone grise est complétée, copiez là (ctrl + C).
 * Collez (ctlr + V) l'information dans le titre d'un évènement Google Agenda.
 
