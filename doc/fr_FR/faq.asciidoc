@@ -2,7 +2,7 @@
 .Peut-on avoir les futurs évènements ?
 --
 Avec les valeurs "event heure à venir" et "event sur la journée" du paramètre "format donnée" : oui d'un point de vue affichage sur le widget. +
-Par contre, le traitement de futurs évènements n'est pas possible (ils ne sont présents qu'en terme d'affichage), sauf si vous parcer les informations. 
+Par contre, le traitement de futurs évènements n'est pas possible (ils ne sont présents qu'en terme d'affichage), sauf si vous parsez les informations. 
 --
 
 [panel,primary]
@@ -17,7 +17,7 @@ Toutes modifications sur l'agent Google n'apparaîtront sur le plugin gCalendar 
 --
 La récupération des données et l'affichage dans le widget ne traitent que des données de la journée courante. +
 Si l'évènement fait plus d'une journée, les heures de début et de fin sont présentées uniquement pour la journée en cours. +
-_(exemple si l'évènement est configurée sur jour1 10h - jour2 10h; le jour 1, il sera affiché: 10h-23h59 et jour2: 0h-10h)_ +
+_(exemple, si l'évènement est configuré sur jour1 10h - jour2 10h; le jour 1, il sera affiché: 10h-23h59 et jour2: 0h-10h)_ +
 Même pour une configuration en "heure suivante", les informations seront affichées uniquement jusqu'à 23h59.
 --
 
@@ -40,7 +40,7 @@ Sur la version mobile, seuls les évènements en cours et à venir sont affiché
 [panel,primary]
 .Existe-il un agenda des jours fériés ? 
 --
-Oui il existe un agenda google qui liste les jours fériés (en France), l'URL est la suivante : +
+Oui, il existe un agenda google qui liste les jours fériés (en France), l'URL est la suivante : +
 https://www.google.com/calendar/feeds/fr.french%23holiday%40group.v.calendar.google.com/public/basic. +
 *Remarque :* par contre, ce calendrier présente aussi des évènements (comme la fête des mères) qui ne sont pas des jours fériés ... :(
 --
